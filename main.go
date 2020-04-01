@@ -8,11 +8,6 @@ import (
 	"time"
 )
 
-func noteFilePath(dir string) string {
-	timeStr := time.Now().Format("2006-01-02-15-04-05")
-	return fmt.Sprintf("%v/%v.md", dir, timeStr)
-}
-
 func main() {
 	r := request.CreateRequest()
 	log.Printf("Created request %v\n", r)
@@ -23,9 +18,9 @@ func main() {
 		}
 		if r.NewArgs == nil {
 			log.Fatalf("TODO: error message, shouldn't get here")
-        }
+		}
 
 		header := fmt.Sprintf("# %v", r.NewArgs.Title)
-		editor.CreateAndEdit(noteFilePath(r.NotesDir), header)
+		editor.CreateAndEdit(r.NotesDir, time.Now().Format("2006.01.02"), header)
 	}
 }
