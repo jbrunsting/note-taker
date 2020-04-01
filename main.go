@@ -20,7 +20,9 @@ func main() {
 			log.Fatalf("TODO: error message, shouldn't get here")
 		}
 
-		header := fmt.Sprintf("# %v", r.NewArgs.Title)
-		editor.CreateAndEdit(r.NotesDir, time.Now().Format("2006.01.02"), header)
+		err := editor.CreateAndEdit(r.NotesDir, r.NewArgs.Title)
+		if err != nil {
+			log.Fatalf("Got error: %v", err)
+		}
 	}
 }

@@ -18,7 +18,7 @@ func getPath(dir string, name string, duplicates int) string {
 	return fmt.Sprintf("%s/%s(%d).md", dir, name, duplicates+1)
 }
 
-func CreateAndEdit(dir string, name string, header string) error {
+func CreateAndEdit(dir string, name string) error {
 	duplicates := 0
 
 	var path string
@@ -38,21 +38,6 @@ func CreateAndEdit(dir string, name string, header string) error {
 	if !os.IsNotExist(err) {
 		return err
 	}
-
-	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		return err
-	}
-
-	fi, err := file.Stat()
-	if err != nil {
-		return err
-	}
-	if fi.Size() == 0 {
-		file.Write([]byte(header))
-	}
-
-	file.Close()
 
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
