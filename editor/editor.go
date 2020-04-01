@@ -5,22 +5,25 @@ import (
 	"os/exec"
 )
 
-const DefaultEditor = "vim"
+const (
+	DefaultEditor = "vim"
+)
 
-func createIfNotExists(filename string) error {
-	file, err := os.OpenFile(filename, os.O_RDONLY|os.O_CREATE, 0644)
+func CreateAndEdit(filename string, header string) error {
+	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return err
 	}
+
+	fi, err := file.Stat()
+	if err != nil {
+		return err
+	}
+	if fi.Size() == 0 {
+		file.Write([]byte(header))
+	}
+
 	file.Close()
-	return nil
-}
-
-func CreateAndEdit(filename string) error {
-	err := createIfNotExists(filename)
-	if err != nil {
-		return err
-	}
 
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
