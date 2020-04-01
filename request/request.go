@@ -50,7 +50,7 @@ func CreateRequest() Request {
 
 	var r Request
 	for _, flagSet := range flagSets {
-		bindSharedArgs(flagSet, r)
+		bindSharedArgs(flagSet, &r)
 	}
 
 	if cmd, ok := cmds[os.Args[1]]; ok {
