@@ -58,8 +58,8 @@ func getScore(note Note, searchKey string, curTime time.Time) float64 {
 }
 
 type Note struct {
-	Title   string
-	ModTime time.Time
+	Title    string
+	ModTime  time.Time
 }
 
 func sortNotes(notes []Note, searchKey string) {
@@ -84,10 +84,7 @@ func SearchForNote(dir string) string {
 	for _, f := range files {
 		n := f.Name()
 		if len(n) >= 3 && n[len(n)-3:] == ".md" {
-			note := Note{}
-			note.Title = n[:len(n)-3]
-			note.ModTime = f.ModTime()
-			notes = append(notes, note)
+			notes = append(notes, Note{n[:len(n)-3], f.ModTime()})
 		}
 	}
 
@@ -130,7 +127,7 @@ func SearchForNote(dir string) string {
 		case "<C-b>":
 			l.ScrollPageUp()
 		case "<Enter>":
-			return "" // TODO: Return selected row
+			return notes[l.SelectedRow].Title
 		default:
 			if e.Type == ui.KeyboardEvent {
 				updated := true

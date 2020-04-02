@@ -18,6 +18,25 @@ func getPath(dir string, name string, duplicates int) string {
 	return fmt.Sprintf("%s/%s(%d).md", dir, name, duplicates+1)
 }
 
+func Edit(path string) error {
+	editor := os.Getenv("EDITOR")
+	if editor == "" {
+		editor = DefaultEditor
+	}
+
+	executable, err := exec.LookPath(editor)
+	if err != nil {
+		return err
+	}
+
+	cmd := exec.Command(executable, path)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	return cmd.Run()
+}
+
 func CreateAndEdit(dir string, name string) error {
 	duplicates := 0
 
@@ -39,20 +58,5 @@ func CreateAndEdit(dir string, name string) error {
 		return err
 	}
 
-	editor := os.Getenv("EDITOR")
-	if editor == "" {
-		editor = DefaultEditor
-	}
-
-	executable, err := exec.LookPath(editor)
-	if err != nil {
-		return err
-	}
-
-	cmd := exec.Command(executable, path)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	return cmd.Run()
+	return Edit(path)
 }

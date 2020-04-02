@@ -21,10 +21,15 @@ type NewArgs struct {
     Title string
 }
 
+type EditArgs struct {
+    Title string
+}
+
 type Request struct {
 	Cmd      Cmd
 	NotesDir string
     NewArgs *NewArgs
+    EditArgs *EditArgs
 }
 
 func bindSharedArgs(fs *flag.FlagSet, r *Request) {
@@ -35,6 +40,9 @@ func bindCommandArgs(fs *flag.FlagSet, r *Request) {
     if r.Cmd == NEW {
         r.NewArgs = &NewArgs{}
         fs.StringVar(&r.NewArgs.Title, "title", DefaultNoteTitle, "the title of the note")
+    } else if (r.Cmd == EDIT) {
+        r.EditArgs = &EditArgs{}
+        fs.StringVar(&r.EditArgs.Title, "title", "", "the title of the note")
     }
 }
 
@@ -61,7 +69,6 @@ func CreateRequest() Request {
 		r.Cmd = cmd
         bindCommandArgs(flagSets[cmd], &r)
         flagSets[cmd].Parse(os.Args[2:])
-		log.Printf("Notes dir is '%v'", r.NotesDir)
 	} else {
 		log.Printf("TODO: Print proper error\n")
 		os.Exit(1)

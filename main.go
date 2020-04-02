@@ -1,15 +1,16 @@
 package main
 
 import (
+	"fmt"
+	"log"
+
 	"github.com/jbrunsting/note-taker/editor"
 	"github.com/jbrunsting/note-taker/io"
 	"github.com/jbrunsting/note-taker/request"
-	"log"
 )
 
 func main() {
 	r := request.CreateRequest()
-	log.Printf("Created request %v\n", r)
 
 	if r.Cmd == request.NEW {
 		if r.NotesDir == "" {
@@ -24,7 +25,22 @@ func main() {
 			log.Fatalf("Got error: '%v'", err)
 		}
 	} else if r.Cmd == request.EDIT {
-		path := io.SearchForNote(r.NotesDir)
-		log.Fatalf("Path found is %v", path)
+		if r.NotesDir == "" {
+			log.Fatalf("TODO: error message, dir empty")
+		}
+		if r.EditArgs == nil {
+			log.Fatalf("TODO: error message, shouldn't get here")
+		}
+
+		title := r.EditArgs.Title
+        if title == "" {
+            title = io.SearchForNote(r.NotesDir)
+        }
+		path := fmt.Sprintf("%s/%s.md", r.NotesDir, title)
+
+		err := editor.Edit(path)
+		if err != nil {
+			log.Fatalf("Got error: '%v'", err)
+		}
 	}
 }
