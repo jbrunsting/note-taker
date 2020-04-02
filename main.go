@@ -35,6 +35,9 @@ func main() {
 		title := r.EditArgs.Title
         if title == "" {
             title = io.SearchForNote(r.NotesDir)
+            if title == "" {
+                log.Fatalf("TODO: Title empty")
+            }
         }
 		path := fmt.Sprintf("%s/%s.md", r.NotesDir, title)
 

@@ -13,13 +13,13 @@ import (
 )
 
 const (
-	lenWeight       = 1.0
-	lenPenaltyFloor = 10.0
-	lenPenaltyCeil  = 100.0
-	matchingWeight  = 5.0
-	dateWeight      = 3.0 // Date diff in days
-	datePenaltyCeil = 50.0
-	SecondsInDay    = 86400.0
+	maxNonMatchPenalty = -100.0
+	maxMatchScore    = 250.0
+	dateWeight       = 10.0 // Date diff in days
+	datePenaltyCeil  = 100.0
+	SecondsInDay     = 86400.0
+	ColorBrightWhite = 15
+	ColorBrightBlack = 8
 )
 
 func getMatching(entry, searchKey string) int {
@@ -40,26 +40,21 @@ func getMatching(entry, searchKey string) int {
 }
 
 func getScore(note Note, searchKey string, curTime time.Time) float64 {
-	matchingScore := float64(getMatching(note.Title, searchKey)) * matchingWeight
-
-	lenPenalty := float64(len(note.Title)) * lenWeight
-	if lenPenalty < lenPenaltyFloor {
-		lenPenalty = 0.0
-	} else if lenPenalty > lenPenaltyCeil {
-		lenPenalty = lenPenaltyCeil
-	}
+	numMatching := getMatching(note.Title, searchKey)
+	percentMatching := float64(numMatching) / float64(len(note.Title))
+	matchingScore := percentMatching * maxMatchScore + (1.0 - percentMatching) * maxNonMatchPenalty
 
 	datePenalty := (curTime.Sub(note.ModTime).Seconds() / SecondsInDay) * dateWeight
 	if datePenalty > datePenaltyCeil {
 		datePenalty = datePenaltyCeil
 	}
 
-	return matchingScore - lenPenalty - datePenalty
+	return matchingScore - datePenalty
 }
 
 type Note struct {
-	Title    string
-	ModTime  time.Time
+	Title   string
+	ModTime time.Time
 }
 
 func sortNotes(notes []Note, searchKey string) {
@@ -90,9 +85,10 @@ func SearchForNote(dir string) string {
 
 	l := widgets.NewList()
 	l.Title = "> "
-	l.TextStyle = ui.NewStyle(ui.ColorYellow)
+	l.TextStyle = ui.NewStyle(ui.ColorWhite, ui.Color(ColorBrightBlack))
+	l.SelectedRowStyle = ui.NewStyle(ColorBrightWhite, ui.ColorBlack, ui.ModifierBold)
 	l.WrapText = false
-	l.SetRect(0, 0, 80, 13)
+	l.SetRect(-1, 0, 80, 13)
 	l.Border = false
 
 	l.Rows = []string{}
@@ -101,7 +97,7 @@ func SearchForNote(dir string) string {
 		l.Rows = []string{}
 		sortNotes(notes, searchKey)
 		for _, note := range notes {
-			l.Rows = append(l.Rows, note.Title)
+			l.Rows = append(l.Rows, " "+note.Title)
 		}
 	}
 
