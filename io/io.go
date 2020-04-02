@@ -13,13 +13,14 @@ import (
 )
 
 const (
+	titleColumnSize    = 40
 	maxNonMatchPenalty = -100.0
-	maxMatchScore    = 250.0
-	dateWeight       = 10.0 // Date diff in days
-	datePenaltyCeil  = 100.0
-	SecondsInDay     = 86400.0
-	ColorBrightWhite = 15
-	ColorBrightBlack = 8
+	maxMatchScore      = 250.0
+	dateWeight         = 10.0 // Date diff in days
+	datePenaltyCeil    = 100.0
+	SecondsInDay       = 86400.0
+	ColorBrightWhite   = 15
+	ColorBrightBlack   = 8
 )
 
 func getMatching(entry, searchKey string) int {
@@ -42,7 +43,7 @@ func getMatching(entry, searchKey string) int {
 func getScore(note Note, searchKey string, curTime time.Time) float64 {
 	numMatching := getMatching(note.Title, searchKey)
 	percentMatching := float64(numMatching) / float64(len(note.Title))
-	matchingScore := percentMatching * maxMatchScore + (1.0 - percentMatching) * maxNonMatchPenalty
+	matchingScore := percentMatching*maxMatchScore + (1.0-percentMatching)*maxNonMatchPenalty
 
 	datePenalty := (curTime.Sub(note.ModTime).Seconds() / SecondsInDay) * dateWeight
 	if datePenalty > datePenaltyCeil {
@@ -62,6 +63,21 @@ func sortNotes(notes []Note, searchKey string) {
 	sort.SliceStable(notes, func(i, j int) bool {
 		return getScore(notes[i], searchKey, t) > getScore(notes[j], searchKey, t)
 	})
+}
+
+func getEntry(note Note) string {
+	titleOutput := []rune(note.Title)
+	if len(titleOutput) > titleColumnSize {
+		titleOutput = titleOutput[:titleColumnSize]
+		for i := 0; i < 3; i++ {
+			titleOutput[titleColumnSize-i-1] = '.'
+		}
+	}
+	return fmt.Sprintf(
+        fmt.Sprintf("%%-%d.%ds  %%s", titleColumnSize, titleColumnSize),
+		string(titleOutput),
+		note.ModTime.Format("2006/01/02 15:04:05"),
+	)
 }
 
 func SearchForNote(dir string) string {
@@ -97,7 +113,7 @@ func SearchForNote(dir string) string {
 		l.Rows = []string{}
 		sortNotes(notes, searchKey)
 		for _, note := range notes {
-			l.Rows = append(l.Rows, " "+note.Title)
+			l.Rows = append(l.Rows, getEntry(note))
 		}
 	}
 
