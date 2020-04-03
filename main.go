@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/jbrunsting/note-taker/manager"
@@ -11,7 +12,7 @@ import (
 func main() {
 	r := request.RequestFromArgs()
 	m := manager.Manager{r.NotesDir}
-    u := ui.UI{}
+	u := ui.UI{}
 
 	if r.Cmd == request.NEW {
 		if r.NotesDir == "" {
@@ -21,18 +22,18 @@ func main() {
 			log.Fatalf("TODO: error message, shouldn't get here")
 		}
 
-		header := ""
-		if len(r.NewArgs.Tags) != 0 {
-			header += "["
-			for i, tag := range r.NewArgs.Tags {
-				if i != 0 {
-					header += ", "
-				}
-				header += "#" + tag
-			}
-			header += "]\n\n"
+		notes, err := m.ListNotes([]string{})
+		if err != nil {
+			log.Fatalf("TODO: Error '%v'", err)
 		}
-		err := m.CreateAndEdit(r.NewArgs.Title, header)
+		header := fmt.Sprintf("[@%d", len(notes)+1)
+		if len(r.NewArgs.Tags) != 0 {
+			for _, tag := range r.NewArgs.Tags {
+				header += ", #" + tag
+			}
+		}
+		header += "]\n"
+		err = m.CreateAndEdit(r.NewArgs.Title, header)
 		if err != nil {
 			log.Fatalf("Got error: '%v'", err)
 		}

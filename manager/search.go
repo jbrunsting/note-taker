@@ -105,7 +105,7 @@ func (m *Manager) passesTags(f os.FileInfo, tags []string) (bool, error) {
 	for _, tag := range tags {
 		for _, item := range listItems {
 			item = strings.TrimSpace(item)
-			if item == "#"+tag {
+			if len(item) > 0 && item[0] == '#' && strings.ToLower(item[1:]) == strings.ToLower(tag) {
 				// TODO: We are doing an OR here, we should also support AND
 				return true, nil
 			}
