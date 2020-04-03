@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"io/ioutil"
 	"sort"
 	"strings"
 	"time"
@@ -70,4 +71,22 @@ func SortNotes(notes []Note, searchKey string) {
 		}
 		return getScore(notes[i], searchKey, t) < getScore(notes[j], searchKey, t)
 	})
+}
+
+func (m *Manager) ListNotes() ([]Note, error) {
+	notes := []Note{}
+
+	files, err := ioutil.ReadDir(m.Dir)
+	if err != nil {
+		return notes, err
+	}
+
+	for _, f := range files {
+		n := f.Name()
+		if len(n) >= 3 && n[len(n)-3:] == ".md" {
+			notes = append(notes, Note{n[:len(n)-3], f.ModTime()})
+		}
+	}
+
+	return notes, nil
 }

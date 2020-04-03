@@ -11,6 +11,7 @@ import (
 func main() {
 	r := request.RequestFromArgs()
 	m := manager.Manager{r.NotesDir}
+    u := ui.UI{m}
 
 	if r.Cmd == request.NEW {
 		if r.NotesDir == "" {
@@ -46,7 +47,7 @@ func main() {
 		// TODO: Handle tags
 		title := r.EditArgs.Title
 		if title == "" {
-			title = ui.SearchForNote(r.NotesDir)
+			title = u.SearchForNote()
 			if title == "" {
 				log.Fatalf("TODO: Title empty")
 			}

@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 
 	ui "github.com/gizak/termui/v3"
@@ -15,6 +14,10 @@ const (
 	colorBrightWhite = 15
 	colorBrightBlack = 8
 )
+
+type UI struct {
+	NoteManager manager.Manager
+}
 
 func getEntry(note manager.Note) string {
 	titleOutput := []rune(note.Title)
@@ -31,24 +34,16 @@ func getEntry(note manager.Note) string {
 	)
 }
 
-func SearchForNote(dir string) string {
-	files, err := ioutil.ReadDir(dir)
+func (u *UI) SearchForNote() string {
+	notes, err := u.NoteManager.ListNotes()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("TODO: Error")
 	}
 
 	if err := ui.Init(); err != nil {
 		log.Fatalf("failed to initialize termui: %v", err)
 	}
 	defer ui.Close()
-
-	notes := []manager.Note{}
-	for _, f := range files {
-		n := f.Name()
-		if len(n) >= 3 && n[len(n)-3:] == ".md" {
-			notes = append(notes, manager.Note{n[:len(n)-3], f.ModTime()})
-		}
-	}
 
 	l := widgets.NewList()
 	l.TextStyle = ui.NewStyle(ui.ColorWhite, ui.Color(colorBrightBlack))
