@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/jbrunsting/note-taker/editor"
+	"github.com/jbrunsting/note-taker/fmanager"
 	"github.com/jbrunsting/note-taker/io"
 	"github.com/jbrunsting/note-taker/request"
 )
@@ -31,7 +31,7 @@ func main() {
 			}
 			header += "]\n\n"
 		}
-		err := editor.CreateAndEdit(r.NotesDir, r.NewArgs.Title, header)
+		err := fmanager.CreateAndEdit(r.NotesDir, r.NewArgs.Title, header)
 		if err != nil {
 			log.Fatalf("Got error: '%v'", err)
 		}
@@ -53,7 +53,7 @@ func main() {
 		}
 		path := fmt.Sprintf("%s/%s.md", r.NotesDir, title)
 
-		err := editor.Edit(path)
+		err := fmanager.Edit(path)
 		if err != nil {
 			log.Fatalf("Got error: '%v'", err)
 		}
