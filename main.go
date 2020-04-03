@@ -20,7 +20,18 @@ func main() {
 			log.Fatalf("TODO: error message, shouldn't get here")
 		}
 
-		err := editor.CreateAndEdit(r.NotesDir, r.NewArgs.Title)
+		header := ""
+		if len(r.NewArgs.Tags) != 0 {
+			header += "["
+			for i, tag := range r.NewArgs.Tags {
+				if i != 0 {
+					header += ", "
+				}
+				header += "@" + tag
+			}
+			header += "]\n\n"
+		}
+		err := editor.CreateAndEdit(r.NotesDir, r.NewArgs.Title, header)
 		if err != nil {
 			log.Fatalf("Got error: '%v'", err)
 		}
@@ -32,13 +43,14 @@ func main() {
 			log.Fatalf("TODO: error message, shouldn't get here")
 		}
 
+		// TODO: Handle tags
 		title := r.EditArgs.Title
-        if title == "" {
-            title = io.SearchForNote(r.NotesDir)
-            if title == "" {
-                log.Fatalf("TODO: Title empty")
-            }
-        }
+		if title == "" {
+			title = io.SearchForNote(r.NotesDir)
+			if title == "" {
+				log.Fatalf("TODO: Title empty")
+			}
+		}
 		path := fmt.Sprintf("%s/%s.md", r.NotesDir, title)
 
 		err := editor.Edit(path)

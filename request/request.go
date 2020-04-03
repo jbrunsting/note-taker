@@ -17,19 +17,32 @@ const (
 	DefaultNoteTitle = "Untitled"
 )
 
+type arrayFlags []string
+
+func (i *arrayFlags) String() string {
+	return ""
+}
+
+func (i *arrayFlags) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
+
 type NewArgs struct {
-    Title string
+	Title string
+	Tags  arrayFlags
 }
 
 type EditArgs struct {
-    Title string
+	Title string
+	Tags  arrayFlags
 }
 
 type Request struct {
 	Cmd      Cmd
 	NotesDir string
-    NewArgs *NewArgs
-    EditArgs *EditArgs
+	NewArgs  *NewArgs
+	EditArgs *EditArgs
 }
 
 func bindSharedArgs(fs *flag.FlagSet, r *Request) {
@@ -37,13 +50,15 @@ func bindSharedArgs(fs *flag.FlagSet, r *Request) {
 }
 
 func bindCommandArgs(fs *flag.FlagSet, r *Request) {
-    if r.Cmd == NEW {
-        r.NewArgs = &NewArgs{}
-        fs.StringVar(&r.NewArgs.Title, "title", DefaultNoteTitle, "the title of the note")
-    } else if (r.Cmd == EDIT) {
-        r.EditArgs = &EditArgs{}
-        fs.StringVar(&r.EditArgs.Title, "title", "", "the title of the note")
-    }
+	if r.Cmd == NEW {
+		r.NewArgs = &NewArgs{}
+		fs.StringVar(&r.NewArgs.Title, "title", DefaultNoteTitle, "the title of the note")
+		fs.Var(&r.NewArgs.Tags, "tags", "the tags for the note")
+	} else if r.Cmd == EDIT {
+		r.EditArgs = &EditArgs{}
+		fs.StringVar(&r.EditArgs.Title, "title", "", "the title of the note")
+		fs.Var(&r.EditArgs.Tags, "tags", "the tags for the note")
+	}
 }
 
 func CreateRequest() Request {
@@ -67,8 +82,8 @@ func CreateRequest() Request {
 
 	if cmd, ok := cmds[os.Args[1]]; ok {
 		r.Cmd = cmd
-        bindCommandArgs(flagSets[cmd], &r)
-        flagSets[cmd].Parse(os.Args[2:])
+		bindCommandArgs(flagSets[cmd], &r)
+		flagSets[cmd].Parse(os.Args[2:])
 	} else {
 		log.Printf("TODO: Print proper error\n")
 		os.Exit(1)

@@ -37,7 +37,7 @@ func Edit(path string) error {
 	return cmd.Run()
 }
 
-func CreateAndEdit(dir string, name string) error {
+func CreateAndEdit(dir string, name string, header string) error {
 	duplicates := 0
 
 	var path string
@@ -57,6 +57,16 @@ func CreateAndEdit(dir string, name string) error {
 	if !os.IsNotExist(err) {
 		return err
 	}
+
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+	_, err = file.WriteString(header)
+	if err != nil {
+		return err
+	}
+	file.Close()
 
 	return Edit(path)
 }
