@@ -1,4 +1,4 @@
-package io
+package manager
 
 import (
 	"sort"
@@ -13,6 +13,11 @@ const (
 	datePenaltyCeil    = 100.0
 	secondsInDay       = 86400.0
 )
+
+type Note struct {
+	Title   string
+	ModTime time.Time
+}
 
 func getMatching(entry, searchKey string) int {
 	entry = strings.ToLower(entry)
@@ -58,7 +63,7 @@ func fullMatch(s string, prefix string) bool {
 	return true
 }
 
-func sortNotes(notes []Note, searchKey string) {
+func SortNotes(notes []Note, searchKey string) {
 	t := time.Now()
 	sort.SliceStable(notes, func(i, j int) bool {
 		iMatch := fullMatch(notes[i].Title, searchKey)

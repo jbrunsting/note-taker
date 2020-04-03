@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"time"
 
 	ui "github.com/gizak/termui/v3"
 	"github.com/gizak/termui/v3/widgets"
+	"github.com/jbrunsting/note-taker/manager"
 )
 
 const (
@@ -16,12 +16,7 @@ const (
 	colorBrightBlack = 8
 )
 
-type Note struct {
-	Title   string
-	ModTime time.Time
-}
-
-func getEntry(note Note) string {
+func getEntry(note manager.Note) string {
 	titleOutput := []rune(note.Title)
 	if len(titleOutput) > titleColumnSize {
 		titleOutput = titleOutput[:titleColumnSize]
@@ -47,11 +42,11 @@ func SearchForNote(dir string) string {
 	}
 	defer ui.Close()
 
-	notes := []Note{}
+	notes := []manager.Note{}
 	for _, f := range files {
 		n := f.Name()
 		if len(n) >= 3 && n[len(n)-3:] == ".md" {
-			notes = append(notes, Note{n[:len(n)-3], f.ModTime()})
+			notes = append(notes, manager.Note{n[:len(n)-3], f.ModTime()})
 		}
 	}
 
@@ -66,7 +61,7 @@ func SearchForNote(dir string) string {
 	searchKey := ""
 	sortRows := func() {
 		l.Rows = []string{}
-		sortNotes(notes, searchKey)
+		manager.SortNotes(notes, searchKey)
 		for _, note := range notes {
 			l.Rows = append(l.Rows, getEntry(note))
 		}
