@@ -1,16 +1,16 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/jbrunsting/note-taker/manager"
-	"github.com/jbrunsting/note-taker/io"
 	"github.com/jbrunsting/note-taker/request"
+	"github.com/jbrunsting/note-taker/ui"
 )
 
 func main() {
 	r := request.RequestFromArgs()
+	m := manager.Manager{r.NotesDir}
 
 	if r.Cmd == request.NEW {
 		if r.NotesDir == "" {
@@ -31,7 +31,7 @@ func main() {
 			}
 			header += "]\n\n"
 		}
-		err := manager.CreateAndEdit(r.NotesDir, r.NewArgs.Title, header)
+		err := m.CreateAndEdit(r.NewArgs.Title, header)
 		if err != nil {
 			log.Fatalf("Got error: '%v'", err)
 		}
@@ -46,14 +46,13 @@ func main() {
 		// TODO: Handle tags
 		title := r.EditArgs.Title
 		if title == "" {
-			title = io.SearchForNote(r.NotesDir)
+			title = ui.SearchForNote(r.NotesDir)
 			if title == "" {
 				log.Fatalf("TODO: Title empty")
 			}
 		}
-		path := fmt.Sprintf("%s/%s.md", r.NotesDir, title)
 
-		err := manager.Edit(path)
+		err := m.Edit(title)
 		if err != nil {
 			log.Fatalf("Got error: '%v'", err)
 		}

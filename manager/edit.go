@@ -11,14 +11,14 @@ const (
 	MaxDuplicates = 10000
 )
 
-func getPath(dir string, name string, duplicates int) string {
+func (m *Manager) getPath(name string, duplicates int) string {
 	if duplicates == 0 {
-		return fmt.Sprintf("%s/%s.md", dir, name)
+		return fmt.Sprintf("%s/%s.md", m.Dir, name)
 	}
-	return fmt.Sprintf("%s/%s(%d).md", dir, name, duplicates+1)
+	return fmt.Sprintf("%s/%s(%d).md", m.Dir, name, duplicates+1)
 }
 
-func Edit(path string) error {
+func edit(path string) error {
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
 		editor = DefaultEditor
@@ -37,13 +37,17 @@ func Edit(path string) error {
 	return cmd.Run()
 }
 
-func CreateAndEdit(dir string, name string, header string) error {
+func (m *Manager) Edit(name string) error {
+	return edit(m.getPath(name, 0))
+}
+
+func (m *Manager) CreateAndEdit(name string, header string) error {
 	duplicates := 0
 
 	var path string
 	var err error
 	for {
-		path = getPath(dir, name, duplicates)
+		path = m.getPath(name, duplicates)
 		_, err = os.Stat(path)
 		if err != nil {
 			break
@@ -68,5 +72,5 @@ func CreateAndEdit(dir string, name string, header string) error {
 	}
 	file.Close()
 
-	return Edit(path)
+	return edit(path)
 }

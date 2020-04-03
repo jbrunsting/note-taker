@@ -14,11 +14,6 @@ const (
 	secondsInDay       = 86400.0
 )
 
-type Note struct {
-	Title   string
-	ModTime time.Time
-}
-
 func getMatching(entry, searchKey string) int {
 	entry = strings.ToLower(entry)
 	searchKey = strings.ToLower(searchKey)
