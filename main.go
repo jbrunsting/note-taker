@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	r := request.CreateRequest()
+	r := request.RequestFromArgs()
 
 	if r.Cmd == request.NEW {
 		if r.NotesDir == "" {
@@ -27,7 +27,7 @@ func main() {
 				if i != 0 {
 					header += ", "
 				}
-				header += "@" + tag
+				header += "#" + tag
 			}
 			header += "]\n\n"
 		}

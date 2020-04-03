@@ -17,25 +17,14 @@ const (
 	DefaultNoteTitle = "Untitled"
 )
 
-type arrayFlags []string
-
-func (i *arrayFlags) String() string {
-	return ""
-}
-
-func (i *arrayFlags) Set(value string) error {
-	*i = append(*i, value)
-	return nil
-}
-
 type NewArgs struct {
 	Title string
-	Tags  arrayFlags
+	Tags  ArrayFlags
 }
 
 type EditArgs struct {
 	Title string
-	Tags  arrayFlags
+	Tags  ArrayFlags
 }
 
 type Request struct {
@@ -61,7 +50,7 @@ func bindCommandArgs(fs *flag.FlagSet, r *Request) {
 	}
 }
 
-func CreateRequest() Request {
+func RequestFromArgs() Request {
 	if len(os.Args) < 2 {
 		log.Fatalf("TODO: Print subcommands\n")
 		os.Exit(1)
