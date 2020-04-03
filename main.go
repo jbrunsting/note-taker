@@ -26,9 +26,10 @@ func main() {
 		if err != nil {
 			log.Fatalf("TODO: Error '%v'", err)
 		}
+		// TODO: Should read notes to get highest ID
 		header := fmt.Sprintf("[@%d", len(notes)+1)
-		if len(r.NewArgs.Tags) != 0 {
-			for _, tag := range r.NewArgs.Tags {
+		if len(r.Tags) != 0 {
+			for _, tag := range r.Tags {
 				header += ", #" + tag
 			}
 		}
@@ -45,10 +46,9 @@ func main() {
 			log.Fatalf("TODO: error message, shouldn't get here")
 		}
 
-		// TODO: Handle tags
 		title := r.EditArgs.Title
 		if title == "" {
-			notes, err := m.ListNotes(r.EditArgs.Tags)
+			notes, err := m.ListNotes(r.Tags)
 			if err != nil {
 				log.Fatalf("TODO: Error '%v'", err)
 			}
@@ -64,6 +64,18 @@ func main() {
 		err := m.Edit(title)
 		if err != nil {
 			log.Fatalf("Got error: '%v'", err)
+		}
+	} else if r.Cmd == request.BULK {
+		if r.NotesDir == "" {
+			log.Fatalf("TODO: error message, dir empty")
+		}
+		notes, err := m.ListNotes(r.Tags)
+		if err != nil {
+			log.Fatalf("TODO: Error '%v'", err)
+		}
+		err = m.BulkEdit(notes)
+		if err != nil {
+			log.Fatalf("TODO: Error '%v'", err)
 		}
 	}
 }

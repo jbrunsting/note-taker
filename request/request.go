@@ -11,6 +11,7 @@ type Cmd int
 const (
 	NEW Cmd = iota
 	EDIT
+	BULK
 )
 
 const (
@@ -19,12 +20,10 @@ const (
 
 type NewArgs struct {
 	Title string
-	Tags  ArrayFlags
 }
 
 type EditArgs struct {
 	Title string
-	Tags  ArrayFlags
 }
 
 type Request struct {
@@ -32,21 +31,21 @@ type Request struct {
 	NotesDir string
 	NewArgs  *NewArgs
 	EditArgs *EditArgs
+	Tags     ArrayFlags
 }
 
 func bindSharedArgs(fs *flag.FlagSet, r *Request) {
 	fs.StringVar(&r.NotesDir, "path", "", "path to notes directory")
+    fs.Var(&r.Tags, "tags", "the tags for the note")
 }
 
 func bindCommandArgs(fs *flag.FlagSet, r *Request) {
 	if r.Cmd == NEW {
 		r.NewArgs = &NewArgs{}
 		fs.StringVar(&r.NewArgs.Title, "title", DefaultNoteTitle, "the title of the note")
-		fs.Var(&r.NewArgs.Tags, "tags", "the tags for the note")
 	} else if r.Cmd == EDIT {
 		r.EditArgs = &EditArgs{}
 		fs.StringVar(&r.EditArgs.Title, "title", "", "the title of the note")
-		fs.Var(&r.EditArgs.Tags, "tags", "the tags for the note")
 	}
 }
 
@@ -59,10 +58,12 @@ func RequestFromArgs() Request {
 	cmds := make(map[string]Cmd)
 	cmds["new"] = NEW
 	cmds["edit"] = EDIT
+	cmds["bulk"] = BULK
 
 	flagSets := make(map[Cmd]*flag.FlagSet)
 	flagSets[NEW] = flag.NewFlagSet("new", flag.ExitOnError)
 	flagSets[EDIT] = flag.NewFlagSet("edit", flag.ExitOnError)
+	flagSets[BULK] = flag.NewFlagSet("bulk", flag.ExitOnError)
 
 	var r Request
 	for _, flagSet := range flagSets {

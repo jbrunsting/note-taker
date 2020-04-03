@@ -2,6 +2,7 @@ package manager
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 )
@@ -70,11 +71,38 @@ func (m *Manager) CreateAndEdit(name string, header string) error {
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 	_, err = file.WriteString(header)
 	if err != nil {
 		return err
 	}
-	file.Close()
+
+	return edit(path)
+}
+
+func (m *Manager) BulkEdit(names []Note) error {
+	file, err := ioutil.TempFile(os.TempDir(), "*.md")
+	if err != nil {
+		return err
+	}
+	path := file.Name()
+	defer os.Remove(path)
+
+	err = file.Close()
+	if err != nil {
+		return err
+	}
+
+	file, err = os.OpenFile(path, os.O_RDWR, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.WriteString("Test")
+	if err != nil {
+		return err
+	}
 
 	return edit(path)
 }

@@ -75,14 +75,12 @@ func SortNotes(notes []Note, searchKey string) {
 	})
 }
 
-func (m *Manager) passesTags(f os.FileInfo, tags []string) (bool, error) {
-	if len(tags) == 0 {
-		return true, nil
-	}
+func (m *Manager) getTags(f os.FileInfo) ([]string, error) {
+	tags := []string{}
 
 	file, err := os.Open(m.getPath(f.Name()))
 	if err != nil {
-		return false, err
+		return tags, err
 	}
 	defer file.Close()
 
@@ -91,28 +89,32 @@ func (m *Manager) passesTags(f os.FileInfo, tags []string) (bool, error) {
 	firstLine := strings.TrimSpace(scanner.Text())
 	err = scanner.Err()
 	if err != nil {
-		return false, err
+		return tags, err
 	}
 
-	if len(firstLine) < 2 {
-		return false, nil
-	}
-
-	if firstLine[0] != '[' || firstLine[len(firstLine)-1] != ']' {
-		return false, nil
+	if len(firstLine) < 2 || firstLine[0] != '[' || firstLine[len(firstLine)-1] != ']' {
+		return tags, nil
 	}
 	listItems := strings.Split(firstLine[1:len(firstLine)-1], ",")
-	for _, tag := range tags {
-		for _, item := range listItems {
-			item = strings.TrimSpace(item)
-			if len(item) > 0 && item[0] == '#' && strings.ToLower(item[1:]) == strings.ToLower(tag) {
-				// TODO: We are doing an OR here, we should also support AND
-				return true, nil
-			}
+	for _, item := range listItems {
+		item = strings.TrimSpace(item)
+		if len(item) > 0 && item[0] == '#' {
+			tags = append(tags, item[1:])
 		}
 	}
 
-	return false, nil
+	return tags, nil
+}
+
+func arraysOverlap(a []string, b []string, caseSensitive bool) bool {
+	for _, sa := range a {
+		for _, sb := range b {
+			if strings.ToLower(sa) == strings.ToLower(sb) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (m *Manager) ListNotes(tags []string) ([]Note, error) {
@@ -126,12 +128,19 @@ func (m *Manager) ListNotes(tags []string) ([]Note, error) {
 	for _, f := range files {
 		n := f.Name()
 		if len(n) >= 3 && n[len(n)-3:] == ".md" {
-			passesTags, err := m.passesTags(f, tags)
+			fileTags, err := m.getTags(f)
 			if err != nil {
 				return notes, err
 			}
-			if passesTags {
-				notes = append(notes, Note{n[:len(n)-3], f.ModTime()})
+
+			// TODO: We are doing an OR here, we should also support AND
+			if arraysOverlap(tags, fileTags, false) {
+				notes = append(notes, Note{
+					n[:len(n)-3],
+					fileTags,
+					m.getPath(f.Name()),
+					f.ModTime(),
+				})
 			}
 		}
 	}
