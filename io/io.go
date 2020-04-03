@@ -58,10 +58,31 @@ type Note struct {
 	ModTime time.Time
 }
 
+func fullMatch(s string, prefix string) bool {
+	s = strings.ToLower(s)
+	prefix = strings.ToLower(prefix)
+	if len(s) < len(prefix) {
+		return false
+	}
+	for i, c := range prefix {
+		if c != []rune(s)[i] {
+			return false
+		}
+	}
+	return true
+}
+
 func sortNotes(notes []Note, searchKey string) {
 	t := time.Now()
 	sort.SliceStable(notes, func(i, j int) bool {
-		return getScore(notes[i], searchKey, t) > getScore(notes[j], searchKey, t)
+		iMatch := fullMatch(notes[i].Title, searchKey)
+		jMatch := fullMatch(notes[j].Title, searchKey)
+		if iMatch && !jMatch {
+			return false
+		} else if !iMatch && jMatch {
+			return true
+		}
+		return getScore(notes[i], searchKey, t) < getScore(notes[j], searchKey, t)
 	})
 }
 
@@ -74,7 +95,7 @@ func getEntry(note Note) string {
 		}
 	}
 	return fmt.Sprintf(
-        fmt.Sprintf("%%-%d.%ds  %%s", titleColumnSize, titleColumnSize),
+		fmt.Sprintf("%%-%d.%ds  %%s", titleColumnSize, titleColumnSize),
 		string(titleOutput),
 		note.ModTime.Format("2006/01/02 15:04:05"),
 	)
@@ -100,11 +121,10 @@ func SearchForNote(dir string) string {
 	}
 
 	l := widgets.NewList()
-	l.Title = "> "
 	l.TextStyle = ui.NewStyle(ui.ColorWhite, ui.Color(ColorBrightBlack))
 	l.SelectedRowStyle = ui.NewStyle(ColorBrightWhite, ui.ColorBlack, ui.ModifierBold)
 	l.WrapText = false
-	l.SetRect(-1, 0, 80, 13)
+	l.SetRect(-1, -1, 80, 16)
 	l.Border = false
 
 	l.Rows = []string{}
@@ -116,9 +136,19 @@ func SearchForNote(dir string) string {
 			l.Rows = append(l.Rows, getEntry(note))
 		}
 	}
-
 	sortRows()
-	ui.Render(l)
+	l.ScrollBottom()
+
+	t := widgets.NewParagraph()
+	t.SetRect(-2, 15, 80, 16)
+	t.Title = "> "
+	t.Border = false
+
+	render := func() {
+		ui.Render(l)
+		ui.Render(t)
+	}
+	render()
 
 	uiEvents := ui.PollEvents()
 	for {
@@ -154,14 +184,14 @@ func SearchForNote(dir string) string {
 				} else {
 					updated = false
 				}
-				l.Title = fmt.Sprintf("> %s", searchKey)
+				t.Title = fmt.Sprintf("> %s", searchKey)
 				if updated {
 					sortRows()
 				}
 			}
 		}
 
-		ui.Render(l)
+		render()
 	}
 	return ""
 }
