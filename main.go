@@ -11,7 +11,7 @@ import (
 func main() {
 	r := request.RequestFromArgs()
 	m := manager.Manager{r.NotesDir}
-    u := ui.UI{m}
+    u := ui.UI{}
 
 	if r.Cmd == request.NEW {
 		if r.NotesDir == "" {
@@ -47,7 +47,14 @@ func main() {
 		// TODO: Handle tags
 		title := r.EditArgs.Title
 		if title == "" {
-			title = u.SearchForNote()
+			notes, err := m.ListNotes(r.EditArgs.Tags)
+			if err != nil {
+				log.Fatalf("TODO: Error '%v'", err)
+			}
+			if len(notes) == 0 {
+				log.Fatalf("TODO: No notes matched")
+			}
+			title = u.SearchForNote(notes)
 			if title == "" {
 				log.Fatalf("TODO: Title empty")
 			}

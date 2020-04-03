@@ -11,11 +11,15 @@ const (
 	MaxDuplicates = 10000
 )
 
-func (m *Manager) getPath(name string, duplicates int) string {
+func (m *Manager) getPath(name string) string {
+	return fmt.Sprintf("%s/%s", m.Dir, name)
+}
+
+func (m *Manager) getFileName(name string, duplicates int) string {
 	if duplicates == 0 {
-		return fmt.Sprintf("%s/%s.md", m.Dir, name)
+		return fmt.Sprintf("%s.md", name)
 	}
-	return fmt.Sprintf("%s/%s(%d).md", m.Dir, name, duplicates+1)
+	return fmt.Sprintf("%s(%d).md", name, duplicates+1)
 }
 
 func edit(path string) error {
@@ -38,7 +42,7 @@ func edit(path string) error {
 }
 
 func (m *Manager) Edit(name string) error {
-	return edit(m.getPath(name, 0))
+	return edit(m.getPath(m.getFileName(name, 0)))
 }
 
 func (m *Manager) CreateAndEdit(name string, header string) error {
@@ -47,7 +51,7 @@ func (m *Manager) CreateAndEdit(name string, header string) error {
 	var path string
 	var err error
 	for {
-		path = m.getPath(name, duplicates)
+		path = m.getPath(m.getFileName(name, duplicates))
 		_, err = os.Stat(path)
 		if err != nil {
 			break

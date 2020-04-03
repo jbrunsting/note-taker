@@ -1,7 +1,9 @@
 package manager
 
 import (
+	"bufio"
 	"io/ioutil"
+	"os"
 	"sort"
 	"strings"
 	"time"
@@ -73,7 +75,47 @@ func SortNotes(notes []Note, searchKey string) {
 	})
 }
 
-func (m *Manager) ListNotes() ([]Note, error) {
+func (m *Manager) passesTags(f os.FileInfo, tags []string) (bool, error) {
+	if len(tags) == 0 {
+		return true, nil
+	}
+
+	file, err := os.Open(m.getPath(f.Name()))
+	if err != nil {
+		return false, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	scanner.Scan()
+	firstLine := strings.TrimSpace(scanner.Text())
+	err = scanner.Err()
+	if err != nil {
+		return false, err
+	}
+
+	if len(firstLine) < 2 {
+		return false, nil
+	}
+
+	if firstLine[0] != '[' || firstLine[len(firstLine)-1] != ']' {
+		return false, nil
+	}
+	listItems := strings.Split(firstLine[1:len(firstLine)-1], ",")
+	for _, tag := range tags {
+		for _, item := range listItems {
+			item = strings.TrimSpace(item)
+			if item == "#"+tag {
+				// TODO: We are doing an OR here, we should also support AND
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
+}
+
+func (m *Manager) ListNotes(tags []string) ([]Note, error) {
 	notes := []Note{}
 
 	files, err := ioutil.ReadDir(m.Dir)
@@ -84,7 +126,13 @@ func (m *Manager) ListNotes() ([]Note, error) {
 	for _, f := range files {
 		n := f.Name()
 		if len(n) >= 3 && n[len(n)-3:] == ".md" {
-			notes = append(notes, Note{n[:len(n)-3], f.ModTime()})
+			passesTags, err := m.passesTags(f, tags)
+			if err != nil {
+				return notes, err
+			}
+			if passesTags {
+				notes = append(notes, Note{n[:len(n)-3], f.ModTime()})
+			}
 		}
 	}
 

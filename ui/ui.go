@@ -15,9 +15,7 @@ const (
 	colorBrightBlack = 8
 )
 
-type UI struct {
-	NoteManager manager.Manager
-}
+type UI struct {}
 
 func getEntry(note manager.Note) string {
 	titleOutput := []rune(note.Title)
@@ -34,12 +32,7 @@ func getEntry(note manager.Note) string {
 	)
 }
 
-func (u *UI) SearchForNote() string {
-	notes, err := u.NoteManager.ListNotes()
-	if err != nil {
-		log.Fatalf("TODO: Error")
-	}
-
+func (u *UI) SearchForNote(notes []manager.Note) string {
 	if err := ui.Init(); err != nil {
 		log.Fatalf("failed to initialize termui: %v", err)
 	}
