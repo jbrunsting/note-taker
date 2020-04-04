@@ -149,7 +149,7 @@ func (m *Manager) ListNotes(tags []string) ([]Note, error) {
 			}
 
 			// TODO: We are doing an OR here, we should also support AND
-			if arraysOverlap(tags, fileTags, false) {
+			if len(tags) == 0 || arraysOverlap(tags, fileTags, false) {
 				notes = append(notes, Note{
 					id,
 					n[:len(n)-3],

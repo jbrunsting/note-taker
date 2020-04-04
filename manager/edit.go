@@ -82,6 +82,10 @@ func (m *Manager) CreateAndEdit(name string, header string) error {
 	return edit(path)
 }
 
+func (m *Manager) Delete(name string) error {
+	return os.Remove(m.getPath(m.getFileName(name, 0)))
+}
+
 func (m *Manager) ViewAll(notes []Note) error {
 	file, err := ioutil.TempFile(os.TempDir(), "*.md")
 	if err != nil {
