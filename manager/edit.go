@@ -1,8 +1,10 @@
 package manager
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 )
@@ -80,7 +82,7 @@ func (m *Manager) CreateAndEdit(name string, header string) error {
 	return edit(path)
 }
 
-func (m *Manager) BulkEdit(names []Note) error {
+func (m *Manager) BulkEdit(notes []Note) error {
 	file, err := ioutil.TempFile(os.TempDir(), "*.md")
 	if err != nil {
 		return err
@@ -99,9 +101,35 @@ func (m *Manager) BulkEdit(names []Note) error {
 	}
 	defer file.Close()
 
-	_, err = file.WriteString("Test")
-	if err != nil {
-		return err
+	for i, note := range notes {
+		noteFile, err := os.Open(note.Path)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer noteFile.Close()
+
+		pre := fmt.Sprintf("# %s\n\n", note.Title)
+		if i != 0 {
+			pre = "\n" + pre
+		}
+		_, err = file.WriteString(pre)
+		if err != nil {
+			return err
+		}
+
+		scanner := bufio.NewScanner(noteFile)
+		for scanner.Scan() {
+			line := scanner.Text() + "\n"
+			if len(line) > 0 && line[0] == '#' {
+				// Indent markdown headers by 1
+				line = "#" + line
+			}
+
+			_, err = file.WriteString(line)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return edit(path)
