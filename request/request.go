@@ -11,7 +11,7 @@ type Cmd int
 const (
 	NEW Cmd = iota
 	EDIT
-	BULK
+	CONCAT
 )
 
 const (
@@ -58,12 +58,12 @@ func RequestFromArgs() Request {
 	cmds := make(map[string]Cmd)
 	cmds["new"] = NEW
 	cmds["edit"] = EDIT
-	cmds["bulk"] = BULK
+	cmds["concat"] = CONCAT
 
 	flagSets := make(map[Cmd]*flag.FlagSet)
 	flagSets[NEW] = flag.NewFlagSet("new", flag.ExitOnError)
 	flagSets[EDIT] = flag.NewFlagSet("edit", flag.ExitOnError)
-	flagSets[BULK] = flag.NewFlagSet("bulk", flag.ExitOnError)
+	flagSets[CONCAT] = flag.NewFlagSet("concat", flag.ExitOnError)
 
 	var r Request
 	for _, flagSet := range flagSets {

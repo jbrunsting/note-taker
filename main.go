@@ -65,7 +65,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Got error: '%v'", err)
 		}
-	} else if r.Cmd == request.BULK {
+	} else if r.Cmd == request.CONCAT {
 		if r.NotesDir == "" {
 			log.Fatalf("TODO: error message, dir empty")
 		}
@@ -74,7 +74,7 @@ func main() {
 			log.Fatalf("TODO: Error '%v'", err)
 		}
 		manager.SortNotesById(notes)
-		err = m.BulkEdit(notes)
+		err = m.ViewAll(notes)
 		if err != nil {
 			log.Fatalf("TODO: Error '%v'", err)
 		}

@@ -82,7 +82,7 @@ func (m *Manager) CreateAndEdit(name string, header string) error {
 	return edit(path)
 }
 
-func (m *Manager) BulkEdit(notes []Note) error {
+func (m *Manager) ViewAll(notes []Note) error {
 	file, err := ioutil.TempFile(os.TempDir(), "*.md")
 	if err != nil {
 		return err
