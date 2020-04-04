@@ -73,6 +73,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("TODO: Error '%v'", err)
 		}
+		manager.SortNotesById(notes)
 		err = m.BulkEdit(notes)
 		if err != nil {
 			log.Fatalf("TODO: Error '%v'", err)

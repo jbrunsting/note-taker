@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -75,12 +76,19 @@ func SortNotes(notes []Note, searchKey string) {
 	})
 }
 
-func (m *Manager) getTags(f os.FileInfo) ([]string, error) {
+func SortNotesById(notes []Note) {
+	sort.SliceStable(notes, func(i, j int) bool {
+		return notes[i].Id > notes[j].Id
+	})
+}
+
+func (m *Manager) getTags(f os.FileInfo) (int, []string, error) {
+	id := -1
 	tags := []string{}
 
 	file, err := os.Open(m.getPath(f.Name()))
 	if err != nil {
-		return tags, err
+		return id, tags, err
 	}
 	defer file.Close()
 
@@ -89,21 +97,28 @@ func (m *Manager) getTags(f os.FileInfo) ([]string, error) {
 	firstLine := strings.TrimSpace(scanner.Text())
 	err = scanner.Err()
 	if err != nil {
-		return tags, err
+		return id, tags, err
 	}
 
 	if len(firstLine) < 2 || firstLine[0] != '[' || firstLine[len(firstLine)-1] != ']' {
-		return tags, nil
+		return id, tags, nil
 	}
 	listItems := strings.Split(firstLine[1:len(firstLine)-1], ",")
 	for _, item := range listItems {
 		item = strings.TrimSpace(item)
-		if len(item) > 0 && item[0] == '#' {
-			tags = append(tags, item[1:])
+		if len(item) > 0 {
+			if item[0] == '#' {
+				tags = append(tags, item[1:])
+			} else if item[0] == '@' {
+				nid, err := strconv.Atoi(item[1:])
+				if err == nil {
+					id = nid
+				}
+			}
 		}
 	}
 
-	return tags, nil
+	return id, tags, nil
 }
 
 func arraysOverlap(a []string, b []string, caseSensitive bool) bool {
@@ -128,7 +143,7 @@ func (m *Manager) ListNotes(tags []string) ([]Note, error) {
 	for _, f := range files {
 		n := f.Name()
 		if len(n) >= 3 && n[len(n)-3:] == ".md" {
-			fileTags, err := m.getTags(f)
+			id, fileTags, err := m.getTags(f)
 			if err != nil {
 				return notes, err
 			}
@@ -136,6 +151,7 @@ func (m *Manager) ListNotes(tags []string) ([]Note, error) {
 			// TODO: We are doing an OR here, we should also support AND
 			if arraysOverlap(tags, fileTags, false) {
 				notes = append(notes, Note{
+					id,
 					n[:len(n)-3],
 					fileTags,
 					m.getPath(f.Name()),
