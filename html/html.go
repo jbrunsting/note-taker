@@ -79,7 +79,7 @@ label {
     background-color: #6D9D99;
 }
 
-input:checked+label {
+input:checked + label {
     background-color: #BFC9BC;
 }
 
@@ -123,9 +123,18 @@ div.header {
 	border-bottom: 1px solid #2E2E2E;
 }
 `
+	// Default to hide the note
 	for _, tag := range tags {
 		css += fmt.Sprintf(
-			"input.%[1]s:checked ~ .%[1]s {display:none}",
+			"input.%[1]s ~ div.%[1]s {display:none}",
+			getClass(tag),
+		)
+	}
+
+	// Show the note if any of the tags match
+	for _, tag := range tags {
+		css += fmt.Sprintf(
+			"input.%[1]s:not(:checked) ~ div.%[1]s {display:block}",
 			getClass(tag),
 		)
 	}
