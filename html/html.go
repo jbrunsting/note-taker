@@ -21,17 +21,34 @@ func incrimentHeaders(html string) string {
 	return html
 }
 
+func makeAlphanumeric(s string) string {
+	o := ""
+	for _, c := range s {
+		if ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') {
+			o += string(c)
+		}
+	}
+	return o
+}
+
 func GenerateHTML(notes []manager.Note) (string, error) {
 	html := "<html>"
 
 	for _, note := range notes {
-        html += fmt.Sprintf("<h1>%s</h1>", note.Title)
+		classes := ""
+		for _, tag := range note.Tags {
+			classes += " " + makeAlphanumeric(tag)
+		}
+
+		html += fmt.Sprintf("<div class=\"%s\">", classes)
+		html += fmt.Sprintf("<h1>%s</h1>", note.Title)
 		md, err := ioutil.ReadFile(note.Path)
 		if err != nil {
 			return html, err
 		}
 		h := string(html2md.Run(md, html2md.WithNoExtensions()))
 		html += incrimentHeaders(h)
+		html += fmt.Sprintf("</div>")
 	}
 
 	html += "</html>"
