@@ -131,7 +131,7 @@ div.header {
 func removeTags(md string) string {
 	lines := strings.SplitN(md, "\n", 2)
 	firstLine := strings.TrimSpace(lines[0])
-	if firstLine[0] == '[' && firstLine[len(firstLine)-1] == ']' {
+	if len(firstLine) > 0 && firstLine[0] == '[' && firstLine[len(firstLine)-1] == ']' {
 		if len(lines) > 1 {
 			return lines[1]
 		}
