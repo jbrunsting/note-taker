@@ -52,14 +52,15 @@ func getToggles(tags []string) string {
 }
 
 func getStyle(tags []string) string {
-    // We just make the CSS a big string so we can easily construct a single
-    // html file that displays the notes, without relying on reading from an
-    // external css file
+	// We just make the CSS a big string so we can easily construct a single
+	// html file that displays the notes, without relying on reading from an
+	// external css file
 	css := `
 html {
     background-color: #F4EFE5;
     font-family: Arial, Helvetica, sans-serif;
     padding: 10px;
+    color: #2E2E2E;
 }
 
 input {
@@ -85,13 +86,37 @@ label:hover {
 div.note {
     margin: 20px 10px;
     padding: 10px;
+    border-radius: 3px;
     box-shadow: 0px 0px 5px grey;
     background-color: #FAF8F3;
 }
 
-h1 {
-    margin: 0px;
+h1.note-header {
+    margin: 5px 0px;
     font-size: 1em;
+    display: inline-block;
+}
+
+div.tag {
+	display: inline-block;
+	float: right;
+    margin: 0px -5px;
+    font-size: 0.8em;
+}
+
+div.tag > p {
+    font-size: 1em;
+    display: inline-block;
+    margin: 5px;
+    padding: 1px 5px;
+    border-radius: 3px;
+	border: 2px solid #6D9D99;
+}
+
+div.header {
+    overflow: auto;
+    padding: 0px 5px 5px 4px;
+	border-bottom: 1px solid #2E2E2E;
 }
 `
 	for _, tag := range tags {
@@ -103,6 +128,18 @@ h1 {
 	return "<style>" + css + "</style>"
 }
 
+func removeTags(md string) string {
+	lines := strings.SplitN(md, "\n", 2)
+	firstLine := strings.TrimSpace(lines[0])
+	if firstLine[0] == '[' && firstLine[len(firstLine)-1] == ']' {
+		if len(lines) > 1 {
+			return lines[1]
+		}
+		return ""
+	}
+	return md
+}
+
 type OrderedTag struct {
 	Tag   string
 	Count int
@@ -112,6 +149,7 @@ func GenerateHTML(notes []manager.Note) (string, error) {
 	oTags := make(map[string]*OrderedTag)
 	html := ""
 	for _, note := range notes {
+		tagHtml := "<div class=\"tag\">"
 		classes := ""
 		for _, tag := range note.Tags {
 			tag = strings.ToLower(tag)
@@ -122,17 +160,27 @@ func GenerateHTML(notes []manager.Note) (string, error) {
 
 			oTags[tag].Count += 1
 			classes += " " + getClass(tag)
-		}
 
-		html += fmt.Sprintf("<div class=\"note %s\">", classes)
-		html += fmt.Sprintf("<h1>%s</h1>", note.Title)
+			tagHtml += fmt.Sprintf("<p>%s</p>", tag)
+		}
+		tagHtml += "</div>"
+
 		md, err := ioutil.ReadFile(note.Path)
 		if err != nil {
 			return html, err
 		}
-		h := string(html2md.Run(md, html2md.WithNoExtensions()))
-		html += incrimentHeaders(h)
-		html += fmt.Sprintf("</div>")
+		noteHtml := string(html2md.Run(
+			[]byte(removeTags(string(md))),
+			html2md.WithNoExtensions(),
+		))
+
+		html += fmt.Sprintf("<div class=\"note %s\">", classes)
+		html += "<div class=\"header\">"
+		html += fmt.Sprintf("<h1 class=\"note-header\">%s</h1>", note.Title)
+		html += tagHtml
+		html += "</div>"
+		html += incrimentHeaders(noteHtml)
+		html += "</div>"
 	}
 
 	vals := []*OrderedTag{}
