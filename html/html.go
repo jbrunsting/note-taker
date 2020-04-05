@@ -52,25 +52,46 @@ func getToggles(tags []string) string {
 }
 
 func getStyle(tags []string) string {
+    // We just make the CSS a big string so we can easily construct a single
+    // html file that displays the notes, without relying on reading from an
+    // external css file
 	css := `
+html {
+    background-color: #F4EFE5;
+    font-family: Arial, Helvetica, sans-serif;
+    padding: 10px;
+}
+
 input {
     display: none;
 }
 
 label {
-    color: white;
+    color: #F4EFE5;
     margin: 5px;
     padding: 3px 7px;
     border-radius: 3px;
-    background-color: #0080ff;
+    background-color: #6D9D99;
 }
 
 input:checked+label {
-    background-color: #73b9ff;
+    background-color: #BFC9BC;
 }
 
 label:hover {
     cursor: pointer;
+}
+
+div.note {
+    margin: 20px 10px;
+    padding: 10px;
+    box-shadow: 0px 0px 5px grey;
+    background-color: #FAF8F3;
+}
+
+h1 {
+    margin: 0px;
+    font-size: 1em;
 }
 `
 	for _, tag := range tags {
@@ -103,7 +124,7 @@ func GenerateHTML(notes []manager.Note) (string, error) {
 			classes += " " + getClass(tag)
 		}
 
-		html += fmt.Sprintf("<div class=\"%s\">", classes)
+		html += fmt.Sprintf("<div class=\"note %s\">", classes)
 		html += fmt.Sprintf("<h1>%s</h1>", note.Title)
 		md, err := ioutil.ReadFile(note.Path)
 		if err != nil {
