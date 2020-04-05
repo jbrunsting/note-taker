@@ -10,6 +10,10 @@ import (
 	html2md "github.com/russross/blackfriday/v2"
 )
 
+const (
+	noTagTag = "untagged"
+)
+
 func incrimentHeaders(html string) string {
 	for i := 5; i > 0; i-- {
 		o := fmt.Sprintf("<h%d>", i)
@@ -162,6 +166,10 @@ func GenerateHTML(notes []manager.Note) (string, error) {
 			classes += " " + getClass(tag)
 
 			tagHtml += fmt.Sprintf("<p>%s</p>", tag)
+		}
+		if len(note.Tags) == 0 {
+			oTags[noTagTag] = &OrderedTag{noTagTag, 0}
+			classes += " " + getClass(noTagTag)
 		}
 		tagHtml += "</div>"
 
