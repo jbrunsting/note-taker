@@ -21,23 +21,55 @@ func incrimentHeaders(html string) string {
 	return html
 }
 
-func makeAlphanumeric(s string) string {
+func getClass(tag string) string {
 	o := ""
-	for _, c := range s {
-		if ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') {
+	for _, c := range tag {
+		if ('a' <= c && c <= 'z') || ('0' <= c && c <= '9') {
 			o += string(c)
+		} else if c == ' ' {
+			o += "_"
 		}
 	}
 	return o
 }
 
-func GenerateHTML(notes []manager.Note) (string, error) {
-	html := "<html>"
+func getToggles(tags []string) string {
+	html := ""
+	for _, tag := range tags {
+		html += fmt.Sprintf(
+			"<label for=\"__id_%s\">%s</label>",
+			getClass(tag),
+			tag,
+		)
+		html += fmt.Sprintf(
+			"<input id=\"__id_%s\" class=\"%s\" type=\"checkbox\"></input>",
+			getClass(tag),
+			getClass(tag),
+		)
+	}
+	return html
+}
 
+func getStyle(tags []string) string {
+	css := ""
+	for _, tag := range tags {
+		css += fmt.Sprintf(
+			"input.%[1]s:checked ~ .%[1]s {display:none}",
+			getClass(tag),
+		)
+	}
+	return "<style>" + css + "</style>"
+}
+
+func GenerateHTML(notes []manager.Note) (string, error) {
+	tags := make(map[string]bool)
+	html := ""
 	for _, note := range notes {
 		classes := ""
 		for _, tag := range note.Tags {
-			classes += " " + makeAlphanumeric(tag)
+			tag = strings.ToLower(tag)
+			tags[tag] = true
+			classes += " " + getClass(tag)
 		}
 
 		html += fmt.Sprintf("<div class=\"%s\">", classes)
@@ -51,6 +83,11 @@ func GenerateHTML(notes []manager.Note) (string, error) {
 		html += fmt.Sprintf("</div>")
 	}
 
-	html += "</html>"
-	return html, nil
+	keys := []string{}
+	for k := range tags {
+		keys = append(keys, k)
+	}
+	html = getStyle(keys) + getToggles(keys) + html
+
+	return "<html>" + html + "</html>", nil
 }
