@@ -3,6 +3,7 @@ package html
 import (
 	"fmt"
 	"io/ioutil"
+	"sort"
 	"strings"
 
 	"github.com/jbrunsting/note-taker/manager"
@@ -37,21 +38,41 @@ func getToggles(tags []string) string {
 	html := ""
 	for _, tag := range tags {
 		html += fmt.Sprintf(
+			"<input id=\"__id_%s\" class=\"%s\" type=\"checkbox\"/>",
+			getClass(tag),
+			getClass(tag),
+		)
+		html += fmt.Sprintf(
 			"<label for=\"__id_%s\">%s</label>",
 			getClass(tag),
 			tag,
-		)
-		html += fmt.Sprintf(
-			"<input id=\"__id_%s\" class=\"%s\" type=\"checkbox\"></input>",
-			getClass(tag),
-			getClass(tag),
 		)
 	}
 	return html
 }
 
 func getStyle(tags []string) string {
-	css := ""
+	css := `
+input {
+    display: none;
+}
+
+label {
+    color: white;
+    margin: 5px;
+    padding: 3px 7px;
+    border-radius: 3px;
+    background-color: #0080ff;
+}
+
+input:checked+label {
+    background-color: #73b9ff;
+}
+
+label:hover {
+    cursor: pointer;
+}
+`
 	for _, tag := range tags {
 		css += fmt.Sprintf(
 			"input.%[1]s:checked ~ .%[1]s {display:none}",
@@ -61,14 +82,24 @@ func getStyle(tags []string) string {
 	return "<style>" + css + "</style>"
 }
 
+type OrderedTag struct {
+	Tag   string
+	Count int
+}
+
 func GenerateHTML(notes []manager.Note) (string, error) {
-	tags := make(map[string]bool)
+	oTags := make(map[string]*OrderedTag)
 	html := ""
 	for _, note := range notes {
 		classes := ""
 		for _, tag := range note.Tags {
 			tag = strings.ToLower(tag)
-			tags[tag] = true
+
+			if _, ok := oTags[tag]; !ok {
+				oTags[tag] = &OrderedTag{tag, 0}
+			}
+
+			oTags[tag].Count += 1
 			classes += " " + getClass(tag)
 		}
 
@@ -83,11 +114,21 @@ func GenerateHTML(notes []manager.Note) (string, error) {
 		html += fmt.Sprintf("</div>")
 	}
 
-	keys := []string{}
-	for k := range tags {
-		keys = append(keys, k)
+	vals := []*OrderedTag{}
+	for _, v := range oTags {
+		vals = append(vals, v)
 	}
-	html = getStyle(keys) + getToggles(keys) + html
+
+	sort.SliceStable(vals, func(i, j int) bool {
+		return vals[i].Count > vals[j].Count
+	})
+
+	tags := []string{}
+	for _, ot := range vals {
+		tags = append(tags, ot.Tag)
+	}
+
+	html = getStyle(tags) + getToggles(tags) + html
 
 	return "<html>" + html + "</html>", nil
 }
