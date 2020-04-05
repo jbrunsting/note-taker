@@ -3,16 +3,15 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 
+	"github.com/jbrunsting/note-taker/html"
 	"github.com/jbrunsting/note-taker/manager"
 	"github.com/jbrunsting/note-taker/request"
 	"github.com/jbrunsting/note-taker/ui"
 )
-
-func getTitle(title string, tags []string) {
-}
 
 func main() {
 	r := request.RequestFromArgs()
@@ -107,6 +106,29 @@ func main() {
 		err = m.ViewAll(notes)
 		if err != nil {
 			log.Fatalf("TODO: Error '%v'", err)
+		}
+	} else if r.Cmd == request.HTML {
+		if r.HtmlArgs == nil {
+			log.Fatalf("TODO: error message, shouldn't get here")
+		}
+
+		notes, err := m.ListNotes(r.HtmlArgs.Tags)
+		if err != nil {
+			log.Fatalf("TODO: Error '%v'", err)
+		}
+		manager.SortNotesById(notes)
+		o, err := html.GenerateHTML(notes)
+		if err != nil {
+			// TODO: Add err check function that logs error nicely
+			log.Fatalf("TODO: Error '%v'", err)
+		}
+		if r.HtmlArgs.File == "" {
+			fmt.Println(string(o))
+		} else {
+			err := ioutil.WriteFile(r.HtmlArgs.File, []byte(o), 0644)
+			if err != nil {
+				log.Fatalf("TODO: Error '%v'", err)
+			}
 		}
 	}
 }

@@ -13,6 +13,7 @@ const (
 	EDIT
 	DELETE
 	CONCAT
+	HTML
 )
 
 const (
@@ -34,8 +35,12 @@ type DeleteArgs struct {
 }
 
 type ConcatArgs struct {
-	Title string
-	Tags  ArrayFlags
+	Tags ArrayFlags
+}
+
+type HtmlArgs struct {
+	Tags ArrayFlags
+	File string
 }
 
 type Request struct {
@@ -45,6 +50,7 @@ type Request struct {
 	EditArgs   *EditArgs
 	DeleteArgs *DeleteArgs
 	ConcatArgs *ConcatArgs
+	HtmlArgs   *HtmlArgs
 }
 
 func bindSharedArgs(fs *flag.FlagSet, r *Request) {
@@ -66,6 +72,10 @@ func bindCommandArgs(fs *flag.FlagSet, r *Request) {
 	} else if r.Cmd == DELETE {
 		r.DeleteArgs = &DeleteArgs{}
 		fs.StringVar(&r.DeleteArgs.Title, "title", "", "the title of the note")
+	} else if r.Cmd == HTML {
+		r.HtmlArgs = &HtmlArgs{}
+		fs.Var(&r.HtmlArgs.Tags, "tags", "the tags for the note")
+		fs.StringVar(&r.HtmlArgs.File, "file", "", "the file to store the html output")
 	}
 }
 
@@ -80,12 +90,12 @@ func RequestFromArgs() Request {
 	cmds["edit"] = EDIT
 	cmds["delete"] = DELETE
 	cmds["concat"] = CONCAT
+	cmds["html"] = HTML
 
 	flagSets := make(map[Cmd]*flag.FlagSet)
-	flagSets[NEW] = flag.NewFlagSet("new", flag.ExitOnError)
-	flagSets[EDIT] = flag.NewFlagSet("edit", flag.ExitOnError)
-	flagSets[DELETE] = flag.NewFlagSet("delete", flag.ExitOnError)
-	flagSets[CONCAT] = flag.NewFlagSet("concat", flag.ExitOnError)
+	for s, e := range cmds {
+		flagSets[e] = flag.NewFlagSet(s, flag.ExitOnError)
+	}
 
 	var r Request
 	for _, flagSet := range flagSets {
