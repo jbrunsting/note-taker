@@ -46,12 +46,16 @@ func getToggles(tags []string) string {
 			getClass(tag),
 			getClass(tag),
 		)
+	}
+	html += "<div class=\"tag_selector\">"
+	for _, tag := range tags {
 		html += fmt.Sprintf(
 			"<label for=\"__id_%s\">%s</label>",
 			getClass(tag),
 			tag,
 		)
 	}
+	html += "</div>"
 	return html
 }
 
@@ -77,10 +81,12 @@ label {
     padding: 3px 7px;
     border-radius: 3px;
     background-color: #6D9D99;
+    white-space: nowrap;
 }
 
-input:checked + label {
-    background-color: #BFC9BC;
+div.tag_selector {
+    overflow-x: auto;
+    padding: 5px;
 }
 
 label:hover {
@@ -88,7 +94,7 @@ label:hover {
 }
 
 div.note {
-    margin: 20px 10px;
+    margin: 10px 10px;
     padding: 10px;
     border-radius: 3px;
     box-shadow: 0px 0px 5px grey;
@@ -123,18 +129,18 @@ div.header {
 	border-bottom: 1px solid #2E2E2E;
 }
 `
-	// Default to hide the note
 	for _, tag := range tags {
-		css += fmt.Sprintf(
-			"input.%[1]s ~ div.%[1]s {display:none}",
-			getClass(tag),
-		)
-	}
-
-	// Show the note if any of the tags match
-	for _, tag := range tags {
-		css += fmt.Sprintf(
-			"input.%[1]s:not(:checked) ~ div.%[1]s {display:block}",
+		css += fmt.Sprintf(`
+input.%[1]s ~ div.%[1]s {
+    display:none
+}
+input.%[1]s:not(:checked) ~ div.%[1]s {
+	display:block;
+}
+input.%[1]s:checked ~ div > label[for=__id_%[1]s] {
+	background-color: #BFC9BC
+}
+`,
 			getClass(tag),
 		)
 	}
