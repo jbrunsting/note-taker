@@ -249,7 +249,7 @@ func GenerateHTML(notes []manager.Note) (string, error) {
 		tags = append(tags, ot.Tag)
 	}
 
-	html = getStyle(tags) + getToggles(tags) + html
+	html = getToggles(tags) + html
 
-	return "<html><body>" + html + "<body></html>", nil
+	return "<html>" + getStyle(tags) + "<body>" + html + "<body></html>", nil
 }

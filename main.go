@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/jbrunsting/note-taker/html"
 	"github.com/jbrunsting/note-taker/manager"
@@ -43,6 +44,15 @@ func main() {
 		if err != nil {
 			log.Fatalf("Got error: '%v'", err)
 		}
+	} else if r.Cmd == request.MV {
+		if r.MvArgs == nil {
+			log.Fatalf("TODO: No image thing")
+		}
+		if r.MvArgs.Title == "" || r.MvArgs.Src == "" {
+			log.Fatalf("TODO: Better arg validation")
+		}
+		components := strings.Split(r.MvArgs.Src, ".")
+		m.Move(r.MvArgs.Src, r.MvArgs.Title, components[len(components)-1])
 	} else if r.Cmd == request.EDIT {
 		if r.EditArgs == nil {
 			log.Fatalf("TODO: error message, shouldn't get here")

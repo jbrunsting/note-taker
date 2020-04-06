@@ -10,6 +10,7 @@ type Cmd int
 
 const (
 	NEW Cmd = iota
+	MV
 	EDIT
 	DELETE
 	CONCAT
@@ -23,6 +24,11 @@ const (
 type NewArgs struct {
 	Title string
 	Tags  ArrayFlags
+}
+
+type MvArgs struct {
+	Title string
+	Src   string
 }
 
 type EditArgs struct {
@@ -47,6 +53,7 @@ type Request struct {
 	Cmd        Cmd
 	NotesDir   string
 	NewArgs    *NewArgs
+	MvArgs     *MvArgs
 	EditArgs   *EditArgs
 	DeleteArgs *DeleteArgs
 	ConcatArgs *ConcatArgs
@@ -62,6 +69,10 @@ func bindCommandArgs(fs *flag.FlagSet, r *Request) {
 		r.NewArgs = &NewArgs{}
 		fs.StringVar(&r.NewArgs.Title, "title", DefaultNoteTitle, "the title of the note")
 		fs.Var(&r.NewArgs.Tags, "tags", "the tags for the note")
+	} else if r.Cmd == MV {
+		r.MvArgs = &MvArgs{}
+		fs.StringVar(&r.MvArgs.Title, "title", DefaultNoteTitle, "the new title of the file")
+		fs.StringVar(&r.MvArgs.Src, "src", "", "the path to the file")
 	} else if r.Cmd == EDIT {
 		r.EditArgs = &EditArgs{}
 		fs.StringVar(&r.EditArgs.Title, "title", "", "the title of the note")
@@ -87,6 +98,7 @@ func RequestFromArgs() Request {
 
 	cmds := make(map[string]Cmd)
 	cmds["new"] = NEW
+	cmds["mv"] = MV
 	cmds["edit"] = EDIT
 	cmds["delete"] = DELETE
 	cmds["concat"] = CONCAT

@@ -18,11 +18,11 @@ func (m *Manager) getPath(name string) string {
 	return fmt.Sprintf("%s/%s", m.Dir, name)
 }
 
-func (m *Manager) getFileName(name string, duplicates int) string {
+func (m *Manager) getFileName(name string, extension string, duplicates int) string {
 	if duplicates == 0 {
-		return fmt.Sprintf("%s.md", name)
+		return fmt.Sprintf("%s.%s", name, extension)
 	}
-	return fmt.Sprintf("%s(%d).md", name, duplicates+1)
+	return fmt.Sprintf("%s(%d).%s", name, duplicates+1, extension)
 }
 
 func edit(path string) error {
@@ -45,7 +45,31 @@ func edit(path string) error {
 }
 
 func (m *Manager) Edit(name string) error {
-	return edit(m.getPath(m.getFileName(name, 0)))
+	return edit(m.getPath(m.getFileName(name, "md", 0)))
+}
+
+func (m *Manager) Move(src string, name string, extension string) error {
+	duplicates := 0
+
+	var path string
+	var err error
+	for {
+		path = m.getPath(m.getFileName(name, extension, duplicates))
+		_, err = os.Stat(path)
+		if err != nil {
+			break
+		}
+
+		duplicates += 1
+		if duplicates > 10000 {
+			return fmt.Errorf("All file names had conflicts")
+		}
+	}
+	if !os.IsNotExist(err) {
+		return err
+	}
+
+	return os.Rename(src, path)
 }
 
 func (m *Manager) CreateAndEdit(name string, header string) error {
@@ -54,7 +78,7 @@ func (m *Manager) CreateAndEdit(name string, header string) error {
 	var path string
 	var err error
 	for {
-		path = m.getPath(m.getFileName(name, duplicates))
+		path = m.getPath(m.getFileName(name, "md", duplicates))
 		_, err = os.Stat(path)
 		if err != nil {
 			break
@@ -83,7 +107,7 @@ func (m *Manager) CreateAndEdit(name string, header string) error {
 }
 
 func (m *Manager) Delete(name string) error {
-	return os.Remove(m.getPath(m.getFileName(name, 0)))
+	return os.Remove(m.getPath(m.getFileName(name, "md", 0)))
 }
 
 func (m *Manager) ViewAll(notes []Note) error {
