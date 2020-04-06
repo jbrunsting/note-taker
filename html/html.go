@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	noTagTag = "untagged"
+	noTagTag    = "untagged"
+	notesDirKey = "$NOTES"
 )
 
 func getClass(tag string) string {
@@ -193,7 +194,7 @@ type OrderedTag struct {
 	Count int
 }
 
-func GenerateHTML(notes []manager.Note) (string, error) {
+func GenerateHTML(notes []manager.Note, notesDir string) (string, error) {
 	oTags := make(map[string]*OrderedTag)
 	html := ""
 	for _, note := range notes {
@@ -217,12 +218,13 @@ func GenerateHTML(notes []manager.Note) (string, error) {
 		}
 		tagHtml += "</div>"
 
-		md, err := ioutil.ReadFile(note.Path)
+		bmd, err := ioutil.ReadFile(note.Path)
 		if err != nil {
 			return html, err
 		}
+		md := strings.Replace(string(bmd), notesDirKey, notesDir, -1)
 		noteHtml := string(html2md.Run(
-			[]byte(removeTags(string(md))),
+			[]byte(removeTags(md)),
 			html2md.WithNoExtensions(),
 		))
 

@@ -127,7 +127,7 @@ func main() {
 			log.Fatalf("TODO: Error '%v'", err)
 		}
 		manager.SortNotesById(notes)
-		o, err := html.GenerateHTML(notes)
+		o, err := html.GenerateHTML(notes, r.NotesDir)
 		if err != nil {
 			// TODO: Add err check function that logs error nicely
 			log.Fatalf("TODO: Error '%v'", err)
