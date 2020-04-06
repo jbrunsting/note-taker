@@ -14,18 +14,6 @@ const (
 	noTagTag = "untagged"
 )
 
-func incrimentHeaders(html string) string {
-	for i := 5; i > 0; i-- {
-		o := fmt.Sprintf("<h%d>", i)
-		c := fmt.Sprintf("</h%d>", i)
-		no := fmt.Sprintf("<h%d>", i+1)
-		nc := fmt.Sprintf("</h%d>", i+1)
-		html = strings.Replace(html, o, no, -1)
-		html = strings.Replace(html, c, nc, -1)
-	}
-	return html
-}
-
 func getClass(tag string) string {
 	o := ""
 	for _, c := range tag {
@@ -71,6 +59,41 @@ html {
     color: #2E2E2E;
 }
 
+p {
+    margin: 5px 0px;
+	font-size: 0.9em;
+}
+
+h1 {
+    margin: 5px 0px;
+    font-size: 1.6em;
+}
+
+h2 {
+    margin: 5px 0px;
+    font-size: 1.45em;
+}
+
+h3 {
+    margin: 5px 0px;
+    font-size: 1.3em;
+}
+
+h4 {
+    margin: 5px 0px;
+    font-size: 1.2em;
+}
+
+h5 {
+    margin: 5px 0px;
+    font-size: 1.1em;
+}
+
+h6 {
+    margin: 5px 0px;
+    font-size: 1em;
+}
+
 input {
     display: none;
 }
@@ -101,8 +124,14 @@ div.note {
     background-color: #FAF8F3;
 }
 
-h1.note-header {
-    margin: 5px 0px;
+body {
+	margin: 0px auto;
+	max-width: 800px;
+}
+
+.note-header {
+    font-weight: bold;
+    margin: 1px 0px;
     font-size: 1em;
     display: inline-block;
 }
@@ -117,7 +146,7 @@ div.tag {
 div.tag > p {
     font-size: 1em;
     display: inline-block;
-    margin: 5px;
+    margin: 0px 0px 0px 10px;
     padding: 1px 5px;
     border-radius: 3px;
 	border: 2px solid #6D9D99;
@@ -125,7 +154,7 @@ div.tag > p {
 
 div.header {
     overflow: auto;
-    padding: 0px 5px 5px 4px;
+    padding: 0px 5px 7px 0px;
 	border-bottom: 1px solid #2E2E2E;
 }
 `
@@ -199,10 +228,10 @@ func GenerateHTML(notes []manager.Note) (string, error) {
 
 		html += fmt.Sprintf("<div class=\"note %s\">", classes)
 		html += "<div class=\"header\">"
-		html += fmt.Sprintf("<h1 class=\"note-header\">%s</h1>", note.Title)
+		html += fmt.Sprintf("<p class=\"note-header\">%s</p>", note.Title)
 		html += tagHtml
 		html += "</div>"
-		html += incrimentHeaders(noteHtml)
+		html += noteHtml
 		html += "</div>"
 	}
 
@@ -222,5 +251,5 @@ func GenerateHTML(notes []manager.Note) (string, error) {
 
 	html = getStyle(tags) + getToggles(tags) + html
 
-	return "<html>" + html + "</html>", nil
+	return "<html><body>" + html + "<body></html>", nil
 }
