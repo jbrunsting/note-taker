@@ -56,8 +56,13 @@ func getStyle(tags []string) string {
 html {
     background-color: #F4EFE5;
     font-family: Arial, Helvetica, sans-serif;
-    padding: 10px;
+    padding: 10px 0px;
     color: #2E2E2E;
+}
+
+body {
+	margin: 0px auto;
+	max-width: 800px;
 }
 
 p {
@@ -118,16 +123,15 @@ label:hover {
 }
 
 div.note {
-    margin: 10px 10px;
+    margin: 10px 0px;
     padding: 10px;
     border-radius: 3px;
     box-shadow: 0px 0px 5px grey;
     background-color: #FAF8F3;
 }
 
-body {
-	margin: 0px auto;
-	max-width: 800px;
+div.note * {
+	max-width: 100%;
 }
 
 .note-header {
