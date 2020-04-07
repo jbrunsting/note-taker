@@ -106,7 +106,7 @@ input {
 
 label {
     color: #F4EFE5;
-    margin: 5px;
+    margin: 5px 10px 5px 0;
     padding: 3px 7px;
     border-radius: 3px;
     background-color: #6D9D99;
@@ -115,7 +115,7 @@ label {
 
 div.tag_selector {
     overflow-x: auto;
-    padding: 5px;
+    padding: 5px 0px;
 }
 
 label:hover {
@@ -132,6 +132,13 @@ div.note {
 
 div.note * {
 	max-width: 100%;
+}
+
+div.note img {
+	max-height: 450px;
+	margin: auto;
+	display: block;
+	padding: 5px;
 }
 
 .note-header {
@@ -232,7 +239,7 @@ func GenerateHTML(notes []manager.Note, notesDir string) (string, error) {
 			html2md.WithNoExtensions(),
 		))
 
-		html += fmt.Sprintf("<div class=\"note %s\">", classes)
+		html += fmt.Sprintf("<div class=\"note %s\" id=\"%s\">", classes, note.Title)
 		html += "<div class=\"header\">"
 		html += fmt.Sprintf("<p class=\"note-header\">%s</p>", note.Title)
 		html += tagHtml
