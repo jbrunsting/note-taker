@@ -37,7 +37,7 @@ func getToggles(tags []string) string {
 		)
 	}
 	html += "<input id=\"dark-mode\" type=\"checkbox\"/>"
-	html += "<div class=\"tag_selector\">"
+	html += "<div class=\"tag-selector\">"
 	for _, tag := range tags {
 		html += fmt.Sprintf(
 			"<label for=\"__id_%s\">%s</label>",
@@ -124,8 +124,8 @@ func GenerateHTML(notes []manager.Note, notesDir string) (string, error) {
 		tags = append(tags, ot.Tag)
 	}
 
-	html = getToggles(tags) + html
-	return "<html>" + getStyle(tags) + "<body>" + html + "<body></html>", nil
+	html = getToggles(tags) + "<div id=\"body\"><div id=\"content\">" + html + "</div></div>"
+	return "<html>" + getStyle(tags) + "<body>" + html + "</body></html>", nil
 }
 
 func getStyle(tags []string) string {
@@ -133,14 +133,18 @@ func getStyle(tags []string) string {
 	// html file that displays the notes, without relying on reading from an
 	// external css file
 	css := `
-html {
-    background-color: #F4EFE5;
+body {
+	margin: 0;
     font-family: Arial, Helvetica, sans-serif;
-    padding: 10px 0px;
-    color: #2E2E2E;
 }
 
-body {
+#body {
+	width: 100%;
+    padding: 0px;
+	margin: 0px;
+}
+
+#content {
 	margin: 0px auto;
 	max-width: 800px;
 }
@@ -185,11 +189,9 @@ input {
 }
 
 label {
-    color: #F4EFE5;
     margin: 0px 10px 0px 0px;
     padding: 3px 7px;
     border-radius: 3px;
-    background-color: #6D9D99;
     white-space: nowrap;
 }
 
@@ -197,40 +199,41 @@ label:hover {
     cursor: pointer;
 }
 
-div.tag_selector {
+div.tag-selector {
+	display: flex;
     overflow-x: auto;
-    padding: 5px 0px;
+    padding: 5px 10px;
+	margin: 10px auto;
+	max-width: 800px;
 }
 
 #dark-mode-toggle {
-    color: #2E2E2E;
-    background-color: #FAF8F3;
-    float: right;
     margin-right: 0px;
+	margin-left: auto;
 }
 
-#dark-mode:checked ~ div > #dark-mode-toggle {
-    color: #FAF8F3;
-    background-color: #2E2E2E;
-}
-
-div.note {
+.note {
     margin: 10px 0px;
     padding: 10px;
     border-radius: 3px;
     box-shadow: 0px 0px 5px grey;
-    background-color: #FAF8F3;
 }
 
-div.note * {
+.note * {
 	max-width: 100%;
 }
 
-div.note img {
+.note img {
 	max-height: 450px;
 	margin: auto;
 	display: block;
 	padding: 5px;
+}
+
+.header {
+    overflow: auto;
+    padding: 0px 5px 7px 0px;
+	border-bottom: 1px solid;
 }
 
 .note-header {
@@ -240,38 +243,91 @@ div.note img {
     display: inline-block;
 }
 
-div.tag {
+.tag {
 	display: inline-block;
 	float: right;
     margin: 0px -5px;
     font-size: 0.8em;
 }
 
-div.tag > p {
+.tag p {
     font-size: 1em;
     display: inline-block;
     margin: 0px 0px 0px 10px;
     padding: 1px 5px;
     border-radius: 3px;
-	border: 2px solid #6D9D99;
+}`
+	// TODO: Should refactor this
+	css += `
+#body {
+    color: #2E2E2E;
+    background-color: #F4EFE5;
 }
 
-div.header {
-    overflow: auto;
-    padding: 0px 5px 7px 0px;
-	border-bottom: 1px solid #2E2E2E;
+label {
+    color: #F4EFE5;
+    background-color: #6D9D99;
+}
+
+#dark-mode-toggle {
+    color: #2E2E2E;
+    background-color: #FAF8F3;
+}
+
+.note {
+    background-color: #FAF8F3;
+}
+
+.header {
+	border-color: #2E2E2E;
+}
+
+.tag p {
+	border: 2px solid;
+	border-color: #6D9D99;
+}
+
+#dark-mode:checked ~ #body {
+    color: #D1D1D1;
+    background-color: #0B101A;
+}
+
+#dark-mode:checked ~ .tag-selector label {
+    color: #0B101A;
+    background-color: #926266;
+}
+
+#dark-mode:checked ~ .tag-selector #dark-mode-toggle {
+    color: #FAF8F3;
+    background-color: #2E2E2E;
+}
+
+#dark-mode:checked ~ #body .note {
+    background-color: #05070C;
+}
+
+#dark-mode:checked ~ #body .header {
+	border-color: #2E2E2E;
+}
+
+#dark-mode:checked ~ #body .tag p {
+	border: 2px solid;
+	border-color: #926266;
 }
 `
 	for _, tag := range tags {
 		css += fmt.Sprintf(`
 input.%[1]s ~ div.%[1]s {
-    display:none
+    display: none
 }
 input.%[1]s:not(:checked) ~ div.%[1]s {
-	display:block;
+	display: block;
 }
 input.%[1]s:checked ~ div > label[for=__id_%[1]s] {
-	background-color: #BFC9BC
+	background-color: #BFC9BC;
+}
+input.%[1]s:checked ~ #dark-mode:checked ~ div > label[for=__id_%[1]s] {
+	background-color: #403643;
 }
 `,
 			getClass(tag),
