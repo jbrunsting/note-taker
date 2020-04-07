@@ -32,6 +32,10 @@ func getEntry(note manager.Note) string {
 	)
 }
 
+func (u *UI) SearchForText(notes []manager.Note) string {
+	return u.SearchForNote(notes)
+}
+
 func (u *UI) SearchForNote(notes []manager.Note) string {
 	if err := ui.Init(); err != nil {
 		log.Fatalf("failed to initialize termui: %v", err)

@@ -117,6 +117,24 @@ func main() {
 		if err != nil {
 			log.Fatalf("TODO: Error '%v'", err)
 		}
+	} else if r.Cmd == request.FIND {
+		if r.FindArgs == nil {
+			log.Fatalf("TODO: error message, shouldn't get here")
+		}
+
+		notes, err := m.ListNotes(r.FindArgs.Tags)
+		if err != nil {
+			log.Fatalf("TODO: Error '%v'", err)
+		}
+		title := u.SearchForText(notes)
+		if title == "" {
+			log.Fatalf("TODO: Title empty")
+		}
+
+		err = m.Edit(title)
+		if err != nil {
+			log.Fatalf("Got error: '%v'", err)
+		}
 	} else if r.Cmd == request.HTML {
 		if r.HtmlArgs == nil {
 			log.Fatalf("TODO: error message, shouldn't get here")

@@ -14,6 +14,7 @@ const (
 	EDIT
 	DELETE
 	CONCAT
+	FIND
 	HTML
 )
 
@@ -44,6 +45,10 @@ type ConcatArgs struct {
 	Tags ArrayFlags
 }
 
+type FindArgs struct {
+	Tags ArrayFlags
+}
+
 type HtmlArgs struct {
 	Tags ArrayFlags
 	File string
@@ -57,6 +62,7 @@ type Request struct {
 	EditArgs   *EditArgs
 	DeleteArgs *DeleteArgs
 	ConcatArgs *ConcatArgs
+	FindArgs   *FindArgs
 	HtmlArgs   *HtmlArgs
 }
 
@@ -83,6 +89,9 @@ func bindCommandArgs(fs *flag.FlagSet, r *Request) {
 	} else if r.Cmd == DELETE {
 		r.DeleteArgs = &DeleteArgs{}
 		fs.StringVar(&r.DeleteArgs.Title, "title", "", "the title of the note")
+	} else if r.Cmd == FIND {
+		r.FindArgs = &FindArgs{}
+		fs.Var(&r.FindArgs.Tags, "tags", "the tags for the note")
 	} else if r.Cmd == HTML {
 		r.HtmlArgs = &HtmlArgs{}
 		fs.Var(&r.HtmlArgs.Tags, "tags", "the tags for the note")
@@ -102,6 +111,7 @@ func RequestFromArgs() Request {
 	cmds["edit"] = EDIT
 	cmds["delete"] = DELETE
 	cmds["concat"] = CONCAT
+	cmds["find"] = FIND
 	cmds["html"] = HTML
 
 	flagSets := make(map[Cmd]*flag.FlagSet)
