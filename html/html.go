@@ -45,7 +45,7 @@ func getToggles(tags []string) string {
 			tag,
 		)
 	}
-	html += "<label id=\"dark-mode-toggle\" for=\"dark-mode\">Dark mode</label>"
+	html += "<label id=\"dark-mode-toggle\" for=\"dark-mode\">☀</label>"
 	html += "</div>"
 	return html
 }
@@ -142,6 +142,8 @@ body {
 	width: 100%;
     padding: 0px;
 	margin: 0px;
+	margin-top: -100px;
+	padding-top: 100px;
 }
 
 #content {
@@ -184,6 +186,10 @@ h6 {
     font-size: 1em;
 }
 
+a {
+	color: #6D9D99;
+}
+
 input {
     display: none;
 }
@@ -203,7 +209,7 @@ div.tag-selector {
 	display: flex;
     overflow-x: auto;
     padding: 5px 10px;
-	margin: 10px auto;
+	margin: 10px auto 0px auto;
 	max-width: 800px;
 }
 
@@ -216,7 +222,7 @@ div.tag-selector {
     margin: 10px 0px;
     padding: 10px;
     border-radius: 3px;
-    box-shadow: 0px 0px 5px grey;
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
 }
 
 .note * {
@@ -233,7 +239,7 @@ div.tag-selector {
 .header {
     overflow: auto;
     padding: 0px 5px 7px 0px;
-	border-bottom: 1px solid;
+	border-bottom: 1px solid #2E2E2E;
 }
 
 .note-header {
@@ -278,10 +284,6 @@ label {
     background-color: #FAF8F3;
 }
 
-.header {
-	border-color: #2E2E2E;
-}
-
 .tag p {
 	border: 2px solid;
 	border-color: #6D9D99;
@@ -289,45 +291,39 @@ label {
 
 #dark-mode:checked ~ #body {
     color: #D1D1D1;
-    background-color: #0B101A;
+    background-color: #05070C;
 }
 
 #dark-mode:checked ~ .tag-selector label {
     color: #0B101A;
-    background-color: #926266;
 }
 
 #dark-mode:checked ~ .tag-selector #dark-mode-toggle {
-    color: #FAF8F3;
+    color: #D1D1D1;
     background-color: #2E2E2E;
 }
 
 #dark-mode:checked ~ #body .note {
-    background-color: #05070C;
+    background-color: #2E2E2E;
 }
 
 #dark-mode:checked ~ #body .header {
-	border-color: #2E2E2E;
-}
-
-#dark-mode:checked ~ #body .tag p {
-	border: 2px solid;
-	border-color: #926266;
+	border-bottom: 1px solid #FAF8F3;
 }
 `
 	for _, tag := range tags {
 		css += fmt.Sprintf(`
-input.%[1]s ~ div.%[1]s {
+input.%[1]s ~ #body div.%[1]s {
     display: none
 }
-input.%[1]s:not(:checked) ~ div.%[1]s {
+input.%[1]s:not(:checked) ~ #body div.%[1]s {
 	display: block;
 }
 input.%[1]s:checked ~ div > label[for=__id_%[1]s] {
 	background-color: #BFC9BC;
 }
 input.%[1]s:checked ~ #dark-mode:checked ~ div > label[for=__id_%[1]s] {
-	background-color: #403643;
+	background-color: #666666;
 }
 `,
 			getClass(tag),
