@@ -133,9 +133,14 @@ func getStyle(tags []string) string {
 	// html file that displays the notes, without relying on reading from an
 	// external css file
 	css := `
+html {
+    height: 100%;
+}
+
 body {
 	margin: 0;
     font-family: Arial, Helvetica, sans-serif;
+    height: 100%;
 }
 
 #body {
@@ -144,6 +149,7 @@ body {
 	margin: 0px;
 	margin-top: -100px;
 	padding-top: 100px;
+	min-height: 100%;
 }
 
 #content {
@@ -323,7 +329,7 @@ input.%[1]s:checked ~ div > label[for=__id_%[1]s] {
 	background-color: #BFC9BC;
 }
 input.%[1]s:checked ~ #dark-mode:checked ~ div > label[for=__id_%[1]s] {
-	background-color: #666666;
+	background-color: #556b69;
 }
 `,
 			getClass(tag),
