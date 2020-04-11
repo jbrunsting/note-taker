@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 const (
@@ -104,6 +105,14 @@ func (m *Manager) CreateAndEdit(name string, header string) error {
 	}
 
 	return edit(path)
+}
+
+func (m *Manager) ReadNote(note *Note) ([]string, error) {
+	content, err := ioutil.ReadFile(note.Path)
+	if err != nil {
+		return []string{}, err
+	}
+	return strings.Split(string(content), "\n"), nil
 }
 
 func (m *Manager) Delete(name string) error {

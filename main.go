@@ -17,7 +17,7 @@ import (
 func main() {
 	r := request.RequestFromArgs()
 	m := manager.Manager{r.NotesDir}
-	u := ui.UI{}
+	u := ui.UI{&m}
 
 	if r.NotesDir == "" {
 		log.Fatalf("TODO: error message, dir empty")
