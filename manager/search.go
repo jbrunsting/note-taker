@@ -68,11 +68,11 @@ func SortNotes(notes []Note, searchKey string) {
 		iMatch := fullMatch(notes[i].Title, searchKey)
 		jMatch := fullMatch(notes[j].Title, searchKey)
 		if iMatch && !jMatch {
-			return false
-		} else if !iMatch && jMatch {
 			return true
+		} else if !iMatch && jMatch {
+			return false
 		}
-		return getScore(notes[i], searchKey, t) < getScore(notes[j], searchKey, t)
+		return getScore(notes[i], searchKey, t) > getScore(notes[j], searchKey, t)
 	})
 }
 
