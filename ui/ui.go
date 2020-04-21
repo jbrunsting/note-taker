@@ -2,12 +2,13 @@ package ui
 
 import (
 	"fmt"
-	"log"
+	"os"
+	"os/exec"
+	"os/signal"
 	"sort"
+	"syscall"
 	"unicode"
 
-	ui "github.com/gizak/termui/v3"
-	"github.com/gizak/termui/v3/widgets"
 	"github.com/jbrunsting/note-taker/manager"
 )
 
@@ -16,6 +17,14 @@ const (
 	titleColumnSize  = 40
 	colorBrightWhite = 15
 	colorBrightBlack = 8
+	enter            = 10
+	del              = 127
+	arrowB0          = 27
+	arrowB1          = 91
+	downArrowB2      = 66
+	upArrowB2        = 65
+	minPrintable     = 33
+	maxPrintable     = 126
 )
 
 type UI struct {
@@ -125,81 +134,52 @@ func (u *UI) SearchForNote(notes []manager.Note) string {
 }
 
 func (u *UI) search(getRows func(string) []string, getResult func(int) string) string {
-	if err := ui.Init(); err != nil {
-		log.Fatalf("failed to initialize termui: %v", err)
-	}
-	defer ui.Close()
-
-	l := widgets.NewList()
-	l.TextStyle = ui.NewStyle(ui.ColorWhite, ui.Color(colorBrightBlack))
-	l.SelectedRowStyle = ui.NewStyle(colorBrightWhite, ui.ColorBlack, ui.ModifierBold)
-	l.WrapText = false
-	l.SetRect(-1, -1, 80, 16)
-	l.Border = false
-
+	rows := []string{}
 	searchKey := ""
-	l.Rows = getRows(searchKey)
-	if len(l.Rows) == 0 {
-		l.Rows = append(l.Rows, "")
-	}
-	l.ScrollBottom()
+	selectedRow := 0
+	exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run()
+	exec.Command("stty", "-F", "/dev/tty", "-echo").Run()
+	defer exec.Command("stty", "-F", "/dev/tty", "echo").Run()
 
-	t := widgets.NewParagraph()
-	t.SetRect(-2, 15, 80, 16)
-	t.Title = "> "
-	t.Border = false
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		exec.Command("stty", "-F", "/dev/tty", "echo").Run()
+		os.Exit(1)
+	}()
 
-	render := func() {
-		ui.Render(l)
-		ui.Render(t)
-	}
-	render()
-
-	uiEvents := ui.PollEvents()
+	var b []byte = make([]byte, 3)
 	for {
-		e := <-uiEvents
-		switch e.ID {
-		case "<C-j>", "<Down>":
-			l.ScrollDown()
-		case "<C-k>", "<Up>":
-			l.ScrollUp()
-		case "<C-c>":
-			return ""
-		case "<C-d>":
-			l.ScrollHalfPageDown()
-		case "<C-u>":
-			l.ScrollHalfPageUp()
-		case "<C-f>":
-			l.ScrollPageDown()
-		case "<C-b>":
-			l.ScrollPageUp()
-		case "<Enter>":
-			return getResult(l.SelectedRow)
-		default:
-			if e.Type == ui.KeyboardEvent {
-				updated := true
-				if e.ID == "<Space>" {
-					searchKey += " "
-				} else if e.ID == "<Backspace>" {
-					if len(searchKey) != 0 {
-						searchKey = searchKey[:len(searchKey)-1]
-					}
-				} else if len(e.ID) == 1 {
-					searchKey += e.ID
-				} else {
-					updated = false
+		rows = getRows(searchKey)
+		os.Stdin.Read(b)
+
+		if b[0] == enter {
+			break
+		} else if b[0] == del {
+			searchKey = searchKey[:len(searchKey)-1]
+		} else if minPrintable <= int(b[0]) && int(b[0]) <= maxPrintable {
+			searchKey += string(b[0])
+		} else if len(b) == 3 && b[0] == arrowB0 && b[1] == arrowB1 {
+			if b[2] == upArrowB2 {
+				selectedRow -= 1
+				if selectedRow < 0 {
+					selectedRow = 0
 				}
-				t.Title = fmt.Sprintf("> %s", searchKey)
-				if updated {
-					l.Rows = getRows(searchKey)
-					if len(l.Rows) == 0 {
-						l.Rows = append(l.Rows, "")
-					}
+			} else if b[2] == downArrowB2 {
+				selectedRow += 1
+				if selectedRow >= len(rows) {
+					selectedRow = len(rows) - 1
 				}
 			}
+		} else {
+			fmt.Println("Bytes are v", b)
 		}
-
-		render()
+		fmt.Println("Search key is ", searchKey)
 	}
-	return ""
+
+	if selectedRow < 0 || selectedRow >= len(rows) {
+		return ""
+	}
+	return getResult(selectedRow)
 }
