@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"log"
+	"sort"
 	"unicode"
 
 	ui "github.com/gizak/termui/v3"
@@ -22,25 +23,27 @@ type UI struct {
 }
 
 type TextSearchRow struct {
-	NoteTitle string
-	LineNum   int
-	LineText  string
+	SecondarySort int
+	NoteTitle     string
+	LineNum       int
+	LineText      string
 }
 
-func charsOccurInOrder(line string, chars string) bool {
+// Returns the number of characters read before a match
+func charsOccurInOrder(line string, chars string) int {
 	if len(line) == 0 || len(chars) == 0 {
-		return false
+		return -1
 	}
 	i := 0
-	for _, c := range line {
-		if rune(c) == unicode.ToLower(rune(chars[i])) {
+	for li, c := range line {
+		if unicode.ToLower(rune(c)) == unicode.ToLower(rune(chars[i])) {
 			i += 1
 			if i >= len(chars) {
-				return true
+				return li
 			}
 		}
 	}
-	return false
+	return -1
 }
 
 func (u *UI) SearchForText(notes []manager.Note) string {
@@ -55,10 +58,11 @@ func (u *UI) SearchForText(notes []manager.Note) string {
 			}
 
 			for line, text := range lines {
-				if charsOccurInOrder(text, searchKey) {
+				result := charsOccurInOrder(text, searchKey)
+				if result != -1 {
 					searchRows = append(
 						searchRows,
-						TextSearchRow{note.Title, line, text},
+						TextSearchRow{-result, note.Title, line, text},
 					)
 				}
 				if len(searchRows) > maxSearchRows {
@@ -69,6 +73,10 @@ func (u *UI) SearchForText(notes []manager.Note) string {
 				break
 			}
 		}
+
+		sort.SliceStable(searchRows, func(i, j int) bool {
+			return searchRows[i].SecondarySort > searchRows[j].SecondarySort
+		})
 
 		rowText := []string{}
 		for _, r := range searchRows {
