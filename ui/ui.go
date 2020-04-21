@@ -3,7 +3,7 @@ package ui
 import (
 	"fmt"
 	"log"
-	"strings"
+	"unicode"
 
 	ui "github.com/gizak/termui/v3"
 	"github.com/gizak/termui/v3/widgets"
@@ -27,6 +27,22 @@ type TextSearchRow struct {
 	LineText  string
 }
 
+func charsOccurInOrder(line string, chars string) bool {
+	if len(line) == 0 || len(chars) == 0 {
+		return false
+	}
+	i := 0
+	for _, c := range line {
+		if rune(c) == unicode.ToLower(rune(chars[i])) {
+			i += 1
+			if i >= len(chars) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (u *UI) SearchForText(notes []manager.Note) string {
 	searchRows := []TextSearchRow{}
 	getRows := func(searchKey string) []string {
@@ -39,7 +55,7 @@ func (u *UI) SearchForText(notes []manager.Note) string {
 			}
 
 			for line, text := range lines {
-				if strings.Contains(text, searchKey) {
+				if charsOccurInOrder(text, searchKey) {
 					searchRows = append(
 						searchRows,
 						TextSearchRow{note.Title, line, text},
