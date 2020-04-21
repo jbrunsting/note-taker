@@ -5,9 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"os/signal"
 	"sort"
-	"syscall"
 	"unicode"
 
 	"github.com/jbrunsting/note-taker/manager"
@@ -153,8 +151,7 @@ func printSearch(rows []string, selectedRow int, searchKey string) int {
 	}
 	maxWidth := int(ws.Col)
 
-	fmt.Printf("\n")
-	rowsPrinted := 1
+	rowsPrinted := 0
 
 	// Print blank lines so we fill 15 lines even with less results
 	for i := 0; i < rowsToShow-len(rows); i++ {
@@ -163,7 +160,11 @@ func printSearch(rows []string, selectedRow int, searchKey string) int {
 	}
 
 	// Print in reverse order so the best result is at the bottom
-	for i := min(len(rows), rowsToShow) - 1; i >= 0; i-- {
+	topRow := min(len(rows), rowsToShow) - 1
+	if topRow < selectedRow {
+		topRow = selectedRow
+	}
+	for i := topRow; i >= topRow-rowsToShow+1 && i >= 0; i-- {
 		if i == selectedRow {
 			fmt.Printf(">")
 		} else {
@@ -190,16 +191,6 @@ func (u *UI) search(getRows func(string) []string, getResult func(int) string) s
 	searchKey := ""
 	selectedRow := 0
 	exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run()
-	exec.Command("stty", "-F", "/dev/tty", "-echo").Run()
-	defer exec.Command("stty", "-F", "/dev/tty", "echo").Run()
-
-	c := make(chan os.Signal)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-c
-		exec.Command("stty", "-F", "/dev/tty", "echo").Run()
-		os.Exit(1)
-	}()
 
 	prevRowsPrinted := 0
 	var b []byte = make([]byte, 3)
@@ -207,9 +198,8 @@ func (u *UI) search(getRows func(string) []string, getResult func(int) string) s
 		rows = getRows(searchKey)
 		if selectedRow >= len(rows) {
 			selectedRow = len(rows) - 1
-			if selectedRow < 0 {
-				selectedRow = 0
-			}
+		} else if selectedRow < 0 {
+			selectedRow = 0
 		}
 
 		fmt.Printf("\r\033[K")
@@ -230,8 +220,8 @@ func (u *UI) search(getRows func(string) []string, getResult func(int) string) s
 		} else if len(b) == 3 && b[0] == altB0 && b[1] == altB1 && (b[2] == upArrowB2 || b[2] == shiftTabB2) {
 			// Reverse direction because UI is bottom up
 			selectedRow += 1
-			if selectedRow >= rowsToShow {
-				selectedRow = rowsToShow - 1
+			if selectedRow >= len(rows) {
+				selectedRow = len(rows) - 1
 			}
 		} else if (len(b) == 3 && b[0] == altB0 && b[1] == altB1 && b[2] == downArrowB2) || b[0] == tab {
 			selectedRow -= 1
