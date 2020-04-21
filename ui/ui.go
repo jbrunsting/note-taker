@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -10,6 +11,7 @@ import (
 	"unicode"
 
 	"github.com/jbrunsting/note-taker/manager"
+	"golang.org/x/sys/unix"
 )
 
 const (
@@ -145,6 +147,12 @@ func min(i int, j int) int {
 
 // Returns the number of rows printed
 func printSearch(rows []string, selectedRow int, searchKey string) int {
+	ws, err := unix.IoctlGetWinsize(0, unix.TIOCGWINSZ)
+	if err != nil {
+		log.Fatalf("TOOD: Err %v", err)
+	}
+	maxWidth := int(ws.Col)
+
 	fmt.Printf("\n")
 	rowsPrinted := 1
 
@@ -162,8 +170,11 @@ func printSearch(rows []string, selectedRow int, searchKey string) int {
 			fmt.Printf(" ")
 		}
 		row := rows[i]
-		if len(row) > 80 {
-			row = row[:80]
+		if len(row) >= maxWidth-5 {
+			row = row[:maxWidth-8]
+			for i := 0; i < 3; i++ {
+				row += "."
+			}
 		}
 		fmt.Printf(" %s\n", row)
 		rowsPrinted += 1
@@ -194,6 +205,13 @@ func (u *UI) search(getRows func(string) []string, getResult func(int) string) s
 	var b []byte = make([]byte, 3)
 	for {
 		rows = getRows(searchKey)
+		if selectedRow >= len(rows) {
+			selectedRow = len(rows) - 1
+			if selectedRow < 0 {
+				selectedRow = 0
+			}
+		}
+
 		fmt.Printf("\r\033[K")
 		for i := 0; i < prevRowsPrinted; i++ {
 			fmt.Printf("\033[1A\033[K")
