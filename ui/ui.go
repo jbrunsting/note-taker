@@ -23,8 +23,9 @@ const (
 	arrowB1          = 91
 	downArrowB2      = 66
 	upArrowB2        = 65
-	minPrintable     = 33
+	minPrintable     = 32
 	maxPrintable     = 126
+	rowsToShow       = 15
 )
 
 type UI struct {
@@ -133,6 +134,44 @@ func (u *UI) SearchForNote(notes []manager.Note) string {
 	return u.search(getRows, getResult)
 }
 
+func min(i int, j int) int {
+    if i < j {
+        return i
+    }
+    return j
+}
+
+// Returns the number of rows printed
+func printSearch(rows []string, selectedRow int, searchKey string) int {
+	fmt.Printf("\n")
+	rowsPrinted := 1
+
+	// Print blank lines so we fill 15 lines even with less results
+	for i := 0; i < rowsToShow-len(rows); i++ {
+		fmt.Printf("\n")
+		rowsPrinted += 1
+	}
+
+    // Print in reverse order so the best result is at the bottom
+	for i := min(len(rows), rowsToShow) - 1; i >= 0; i-- {
+		if i == selectedRow {
+			fmt.Printf(">")
+		} else {
+			fmt.Printf(" ")
+		}
+        row := rows[i]
+        if len(row) > 80 {
+            row = row[:80]
+        }
+        fmt.Printf(" %s\n", row)
+		rowsPrinted += 1
+	}
+
+	fmt.Printf("> %s", searchKey)
+
+	return rowsPrinted
+}
+
 func (u *UI) search(getRows func(string) []string, getResult func(int) string) string {
 	rows := []string{}
 	searchKey := ""
@@ -149,33 +188,39 @@ func (u *UI) search(getRows func(string) []string, getResult func(int) string) s
 		os.Exit(1)
 	}()
 
+	prevRowsPrinted := 0
 	var b []byte = make([]byte, 3)
 	for {
 		rows = getRows(searchKey)
-		os.Stdin.Read(b)
+        fmt.Printf("\r\033[K")
+        for i := 0; i < prevRowsPrinted; i++ {
+            fmt.Printf("\033[1A\033[K")
+        }
+		prevRowsPrinted = printSearch(rows, selectedRow, searchKey)
 
+		os.Stdin.Read(b)
 		if b[0] == enter {
 			break
 		} else if b[0] == del {
-			searchKey = searchKey[:len(searchKey)-1]
+            if len(searchKey) > 0 {
+                searchKey = searchKey[:len(searchKey)-1]
+            }
 		} else if minPrintable <= int(b[0]) && int(b[0]) <= maxPrintable {
 			searchKey += string(b[0])
 		} else if len(b) == 3 && b[0] == arrowB0 && b[1] == arrowB1 {
+            // Reverse direction because UI is bottom up
 			if b[2] == upArrowB2 {
+				selectedRow += 1
+				if selectedRow >= rowsToShow {
+					selectedRow = rowsToShow - 1
+				}
+			} else if b[2] == downArrowB2 {
 				selectedRow -= 1
 				if selectedRow < 0 {
 					selectedRow = 0
 				}
-			} else if b[2] == downArrowB2 {
-				selectedRow += 1
-				if selectedRow >= len(rows) {
-					selectedRow = len(rows) - 1
-				}
 			}
-		} else {
-			fmt.Println("Bytes are v", b)
 		}
-		fmt.Println("Search key is ", searchKey)
 	}
 
 	if selectedRow < 0 || selectedRow >= len(rows) {
