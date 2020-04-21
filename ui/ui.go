@@ -14,7 +14,7 @@ import (
 
 const (
 	maxSearchRows    = 1000
-	titleColumnSize  = 30
+	titleColumnSize  = 20
 	colorBrightWhite = 15
 	colorBrightBlack = 8
 	enter            = 10
@@ -34,7 +34,7 @@ type UI struct {
 	Manager *manager.Manager
 }
 
-type TextSearchRow struct {
+type textSearchRow struct {
 	SecondarySort int
 	NoteTitle     string
 	LineNum       int
@@ -59,9 +59,9 @@ func charsOccurInOrder(line string, chars string) int {
 }
 
 func (u *UI) SearchForText(notes []manager.Note) string {
-	searchRows := []TextSearchRow{}
-	getRows := func(searchKey string) []string {
-		searchRows = []TextSearchRow{}
+	searchRows := []textSearchRow{}
+	getRows := func(searchKey string) [][]RowComponent {
+		searchRows = []textSearchRow{}
 		manager.SortNotes(notes, searchKey)
 		for _, note := range notes {
 			lines, err := u.Manager.ReadNote(&note)
@@ -74,12 +74,7 @@ func (u *UI) SearchForText(notes []manager.Note) string {
 				if result != -1 {
 					searchRows = append(
 						searchRows,
-						TextSearchRow{
-							-result,
-							note.Title,
-							line,
-							fmt.Sprintf("%s: %s", note.Title, text),
-						},
+						textSearchRow{-result, note.Title, line, text},
 					)
 				}
 				if len(searchRows) > maxSearchRows {
@@ -95,12 +90,16 @@ func (u *UI) SearchForText(notes []manager.Note) string {
 			return searchRows[i].SecondarySort > searchRows[j].SecondarySort
 		})
 
-		rowText := []string{}
+		rows := make([][]RowComponent, 0)
 		for _, r := range searchRows {
-			rowText = append(rowText, r.LineText)
+			rowComponents := []RowComponent{}
+			rowComponents = append(rowComponents, RowComponent{r.NoteTitle, RowTitle, titleColumnSize, titleColumnSize})
+			rowComponents = append(rowComponents, RowComponent{"", RowDecoration, 1, 1})
+			rowComponents = append(rowComponents, RowComponent{r.LineText, RowText, -1, -1})
+			rows = append(rows, rowComponents)
 		}
 
-		return rowText
+		return rows
 	}
 
 	getResult := func(index int) string {
@@ -110,27 +109,22 @@ func (u *UI) SearchForText(notes []manager.Note) string {
 		return ""
 	}
 
-	return u.search(getRows, getResult)
+	return u.SearchList(getRows, getResult)
 }
 
 func (u *UI) SearchForNote(notes []manager.Note) string {
-	getRows := func(searchKey string) []string {
-		rows := []string{}
+	getRows := func(searchKey string) [][]RowComponent {
 		manager.SortNotes(notes, searchKey)
+
+		rows := make([][]RowComponent, 0)
 		for _, note := range notes {
-			titleOutput := []rune(note.Title)
-			if len(titleOutput) > titleColumnSize {
-				titleOutput = titleOutput[:titleColumnSize]
-				for i := 0; i < 3; i++ {
-					titleOutput[titleColumnSize-i-1] = '.'
-				}
-			}
-			rows = append(rows, fmt.Sprintf(
-				fmt.Sprintf("%%-%d.%ds  %%s", titleColumnSize, titleColumnSize),
-				string(titleOutput),
-				note.ModTime.Format("2006/01/02 15:04:05"),
-			))
+			rowComponents := []RowComponent{}
+			rowComponents = append(rowComponents, RowComponent{note.Title, RowTitle, titleColumnSize, titleColumnSize})
+			rowComponents = append(rowComponents, RowComponent{"", RowDecoration, 1, 1})
+			rowComponents = append(rowComponents, RowComponent{note.ModTime.Format("2006/01/02 15:04:05"), RowDate, -1, -1})
+			rows = append(rows, rowComponents)
 		}
+
 		return rows
 	}
 
@@ -138,7 +132,7 @@ func (u *UI) SearchForNote(notes []manager.Note) string {
 		return notes[index].Title
 	}
 
-	return u.search(getRows, getResult)
+	return u.SearchList(getRows, getResult)
 }
 
 func min(i int, j int) int {
@@ -148,13 +142,53 @@ func min(i int, j int) int {
 	return j
 }
 
+const (
+	RowTitle = iota
+	RowText
+	RowDate
+	RowDecoration
+)
+
+type RowComponent struct {
+	Text     string
+	Type     int
+	MinWidth int
+	MaxWidth int
+}
+
+func constrainText(text string, minWidth int, maxWidth int, elipsize bool) string {
+	width := 0
+	output := []rune{}
+	for _, c := range text {
+		if maxWidth != -1 && minPrintable <= int(c) && int(c) <= maxPrintable {
+			if elipsize && width+3 == maxWidth {
+				output = append(output, []rune{'.', '.', '.'}...)
+				width = maxWidth
+			} else if width < maxWidth {
+				output = append(output, c)
+				width += 1
+			}
+		} else {
+			output = append(output, c)
+		}
+	}
+
+	if minWidth != -1 {
+		for i := 0; i < minWidth-width; i++ {
+			output = append(output, ' ')
+		}
+	}
+
+	return string(output)
+}
+
 // Returns the number of rows printed
-func printSearch(rows []string, selectedRow int, searchKey string) int {
+func printSearch(rows [][]RowComponent, selectedRow int, searchKey string) int {
 	ws, err := unix.IoctlGetWinsize(0, unix.TIOCGWINSZ)
 	if err != nil {
 		log.Fatalf("TOOD: Err %v", err)
 	}
-	maxWidth := int(ws.Col)
+	screenWidth := int(ws.Col)
 
 	rowsPrinted := 0
 
@@ -165,9 +199,9 @@ func printSearch(rows []string, selectedRow int, searchKey string) int {
 	}
 
 	// Print in reverse order so the best result is at the bottom
-	topRow := min(len(rows), rowsToShow) - 1
+	topRow := min(len(rows)-1, rowsToShow-1)
 	if topRow < selectedRow {
-		topRow = selectedRow
+		topRow = min(len(rows)-1, selectedRow)
 	}
 	for i := topRow; i >= topRow-rowsToShow+1 && i >= 0; i-- {
 		line := ""
@@ -176,14 +210,12 @@ func printSearch(rows []string, selectedRow int, searchKey string) int {
 		} else {
 			line += "  "
 		}
-		line += rows[i]
-		if len(line) >= maxWidth {
-			line = line[:maxWidth-3]
-			for i := 0; i < 3; i++ {
-				line += "."
-			}
+
+		for _, component := range rows[i] {
+			line += constrainText(component.Text, component.MinWidth, component.MaxWidth, true)
 		}
-		fmt.Printf("%s\n", line)
+
+		fmt.Printf("%s\n", constrainText(line, 0, screenWidth, true))
 		rowsPrinted += 1
 	}
 
@@ -192,8 +224,8 @@ func printSearch(rows []string, selectedRow int, searchKey string) int {
 	return rowsPrinted
 }
 
-func (u *UI) search(getRows func(string) []string, getResult func(int) string) string {
-	rows := []string{}
+func (u *UI) SearchList(getRows func(string) [][]RowComponent, getResult func(int) string) string {
+	var rows [][]RowComponent
 	searchKey := ""
 	selectedRow := 0
 	exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run()
