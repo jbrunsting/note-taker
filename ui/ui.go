@@ -13,21 +13,19 @@ import (
 )
 
 const (
-	maxSearchRows    = 1000
-	titleColumnSize  = 20
-	colorBrightWhite = 15
-	colorBrightBlack = 8
-	enter            = 10
-	del              = 127
-	altB0            = 27
-	altB1            = 91
-	downArrowB2      = 66
-	upArrowB2        = 65
-	shiftTabB2       = 90
-	tab              = 9
-	minPrintable     = 32
-	maxPrintable     = 126
-	rowsToShow       = 15
+	maxSearchRows   = 1000
+	titleColumnSize = 25
+	enter           = 10
+	del             = 127
+	altB0           = 27
+	altB1           = 91
+	downArrowB2     = 66
+	upArrowB2       = 65
+	shiftTabB2      = 90
+	tab             = 9
+	minPrintable    = 32
+	maxPrintable    = 126
+	rowsToShow      = 15
 )
 
 type UI struct {
@@ -156,30 +154,43 @@ type RowComponent struct {
 	MaxWidth int
 }
 
-func constrainText(text string, minWidth int, maxWidth int, elipsize bool) string {
+func constrainText(text string, minWidth int, maxWidth int, fgcolor string, bgcolor string, elipsize bool) string {
 	width := 0
-	output := []rune{}
+	output := ""
+	if fgcolor != "" {
+		output += fmt.Sprintf("\u001b[%sm", fgcolor)
+	}
+	if bgcolor != "" {
+		output += fmt.Sprintf("\u001b[%sm", bgcolor)
+	}
 	for _, c := range text {
 		if maxWidth != -1 && minPrintable <= int(c) && int(c) <= maxPrintable {
 			if elipsize && width+3 == maxWidth {
-				output = append(output, []rune{'.', '.', '.'}...)
+				output += "..."
 				width = maxWidth
 			} else if width < maxWidth {
-				output = append(output, c)
+				output += string(c)
 				width += 1
 			}
 		} else {
-			output = append(output, c)
+			output += string(c)
 		}
+	}
+
+	if bgcolor != "" {
+		output += "\u001b[0m"
+	}
+	if fgcolor != "" {
+		output += "\u001b[0m"
 	}
 
 	if minWidth != -1 {
 		for i := 0; i < minWidth-width; i++ {
-			output = append(output, ' ')
+			output += " "
 		}
 	}
 
-	return string(output)
+	return output
 }
 
 // Returns the number of rows printed
@@ -212,10 +223,16 @@ func printSearch(rows [][]RowComponent, selectedRow int, searchKey string) int {
 		}
 
 		for _, component := range rows[i] {
-			line += constrainText(component.Text, component.MinWidth, component.MaxWidth, true)
+			line += constrainText(component.Text, component.MinWidth, component.MaxWidth, "", "", true)
 		}
 
-		fmt.Printf("%s\n", constrainText(line, 0, screenWidth, true))
+		fgcolor := ""
+		bgcolor := ""
+		if i == selectedRow {
+			fgcolor = "37;1"
+			bgcolor = "40"
+		}
+		fmt.Printf("%s\n", constrainText(line, 0, screenWidth, fgcolor, bgcolor, true))
 		rowsPrinted += 1
 	}
 
