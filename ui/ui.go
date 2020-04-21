@@ -14,7 +14,7 @@ import (
 
 const (
 	maxSearchRows    = 1000
-	titleColumnSize  = 40
+	titleColumnSize  = 30
 	colorBrightWhite = 15
 	colorBrightBlack = 8
 	enter            = 10
@@ -74,7 +74,12 @@ func (u *UI) SearchForText(notes []manager.Note) string {
 				if result != -1 {
 					searchRows = append(
 						searchRows,
-						TextSearchRow{-result, note.Title, line, text},
+						TextSearchRow{
+							-result,
+							note.Title,
+							line,
+							fmt.Sprintf("%s: %s", note.Title, text),
+						},
 					)
 				}
 				if len(searchRows) > maxSearchRows {
@@ -165,19 +170,20 @@ func printSearch(rows []string, selectedRow int, searchKey string) int {
 		topRow = selectedRow
 	}
 	for i := topRow; i >= topRow-rowsToShow+1 && i >= 0; i-- {
+		line := ""
 		if i == selectedRow {
-			fmt.Printf(">")
+			line += "> "
 		} else {
-			fmt.Printf(" ")
+			line += "  "
 		}
-		row := rows[i]
-		if len(row) >= maxWidth-5 {
-			row = row[:maxWidth-8]
+		line += rows[i]
+		if len(line) >= maxWidth {
+			line = line[:maxWidth-3]
 			for i := 0; i < 3; i++ {
-				row += "."
+				line += "."
 			}
 		}
-		fmt.Printf(" %s\n", row)
+		fmt.Printf("%s\n", line)
 		rowsPrinted += 1
 	}
 
