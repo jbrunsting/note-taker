@@ -19,10 +19,12 @@ const (
 	colorBrightBlack = 8
 	enter            = 10
 	del              = 127
-	arrowB0          = 27
-	arrowB1          = 91
+	altB0            = 27
+	altB1            = 91
 	downArrowB2      = 66
 	upArrowB2        = 65
+	shiftTabB2       = 90
+	tab              = 9
 	minPrintable     = 32
 	maxPrintable     = 126
 	rowsToShow       = 15
@@ -135,10 +137,10 @@ func (u *UI) SearchForNote(notes []manager.Note) string {
 }
 
 func min(i int, j int) int {
-    if i < j {
-        return i
-    }
-    return j
+	if i < j {
+		return i
+	}
+	return j
 }
 
 // Returns the number of rows printed
@@ -152,18 +154,18 @@ func printSearch(rows []string, selectedRow int, searchKey string) int {
 		rowsPrinted += 1
 	}
 
-    // Print in reverse order so the best result is at the bottom
+	// Print in reverse order so the best result is at the bottom
 	for i := min(len(rows), rowsToShow) - 1; i >= 0; i-- {
 		if i == selectedRow {
 			fmt.Printf(">")
 		} else {
 			fmt.Printf(" ")
 		}
-        row := rows[i]
-        if len(row) > 80 {
-            row = row[:80]
-        }
-        fmt.Printf(" %s\n", row)
+		row := rows[i]
+		if len(row) > 80 {
+			row = row[:80]
+		}
+		fmt.Printf(" %s\n", row)
 		rowsPrinted += 1
 	}
 
@@ -192,33 +194,31 @@ func (u *UI) search(getRows func(string) []string, getResult func(int) string) s
 	var b []byte = make([]byte, 3)
 	for {
 		rows = getRows(searchKey)
-        fmt.Printf("\r\033[K")
-        for i := 0; i < prevRowsPrinted; i++ {
-            fmt.Printf("\033[1A\033[K")
-        }
+		fmt.Printf("\r\033[K")
+		for i := 0; i < prevRowsPrinted; i++ {
+			fmt.Printf("\033[1A\033[K")
+		}
 		prevRowsPrinted = printSearch(rows, selectedRow, searchKey)
 
 		os.Stdin.Read(b)
 		if b[0] == enter {
 			break
 		} else if b[0] == del {
-            if len(searchKey) > 0 {
-                searchKey = searchKey[:len(searchKey)-1]
-            }
+			if len(searchKey) > 0 {
+				searchKey = searchKey[:len(searchKey)-1]
+			}
 		} else if minPrintable <= int(b[0]) && int(b[0]) <= maxPrintable {
 			searchKey += string(b[0])
-		} else if len(b) == 3 && b[0] == arrowB0 && b[1] == arrowB1 {
-            // Reverse direction because UI is bottom up
-			if b[2] == upArrowB2 {
-				selectedRow += 1
-				if selectedRow >= rowsToShow {
-					selectedRow = rowsToShow - 1
-				}
-			} else if b[2] == downArrowB2 {
-				selectedRow -= 1
-				if selectedRow < 0 {
-					selectedRow = 0
-				}
+		} else if len(b) == 3 && b[0] == altB0 && b[1] == altB1 && (b[2] == upArrowB2 || b[2] == shiftTabB2) {
+			// Reverse direction because UI is bottom up
+			selectedRow += 1
+			if selectedRow >= rowsToShow {
+				selectedRow = rowsToShow - 1
+			}
+		} else if (len(b) == 3 && b[0] == altB0 && b[1] == altB1 && b[2] == downArrowB2) || b[0] == tab {
+			selectedRow -= 1
+			if selectedRow < 0 {
+				selectedRow = 0
 			}
 		}
 	}
