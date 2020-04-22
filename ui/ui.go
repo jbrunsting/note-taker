@@ -56,6 +56,51 @@ func charsOccurInOrder(line string, chars string) int {
 	return -1
 }
 
+func getSearchTextRowComponents(text string, chars string) []RowComponent {
+	components := []RowComponent{}
+
+	curMatch := ""
+	curNonMatch := ""
+
+	i := 0
+	for ti, c := range text {
+		if unicode.ToLower(rune(c)) == unicode.ToLower(rune(chars[i])) {
+			if curNonMatch != "" {
+				components = append(components, RowComponent{curNonMatch, RowText, -1, -1})
+				curNonMatch = ""
+			}
+			curMatch += string(c)
+			i += 1
+			if i >= len(chars) {
+				if ti+1 < len(text) {
+					curNonMatch = text[ti+1:]
+				}
+				break
+			}
+		} else {
+			if curMatch != "" {
+				components = append(components, RowComponent{curMatch, RowSelectedText, -1, -1})
+				curMatch = ""
+			}
+			curNonMatch += string(c)
+		}
+	}
+
+	if curMatch != "" {
+		components = append(components, RowComponent{curMatch, RowSelectedText, -1, -1})
+	}
+	if curNonMatch != "" {
+		components = append(components, RowComponent{curNonMatch, RowText, -1, -1})
+	}
+
+	// Replace the start with an elipse if it is not a match
+	if components[0].Type == RowText {
+		components[0].Text = "..."
+	}
+
+	return components
+}
+
 func (u *UI) SearchForText(notes []manager.Note) string {
 	searchRows := []textSearchRow{}
 	getRows := func(searchKey string) [][]RowComponent {
@@ -93,7 +138,7 @@ func (u *UI) SearchForText(notes []manager.Note) string {
 			rowComponents := []RowComponent{}
 			rowComponents = append(rowComponents, RowComponent{r.NoteTitle, RowTitle, titleColumnSize, titleColumnSize})
 			rowComponents = append(rowComponents, RowComponent{"", RowDecoration, 1, 1})
-			rowComponents = append(rowComponents, RowComponent{r.LineText, RowText, -1, -1})
+			rowComponents = append(rowComponents, getSearchTextRowComponents(r.LineText, searchKey)...)
 			rows = append(rows, rowComponents)
 		}
 
@@ -143,6 +188,7 @@ func min(i int, j int) int {
 const (
 	RowTitle = iota
 	RowText
+	RowSelectedText
 	RowDate
 	RowDecoration
 )
@@ -154,6 +200,32 @@ type RowComponent struct {
 	MaxWidth int
 }
 
+func willPrint(text string, pos int) bool {
+	if !(minPrintable <= int(text[pos]) && int(text[pos]) <= maxPrintable) {
+		return false
+	}
+	// Check if it is a color code
+	prevEscPos := -1
+	for i := pos; i >= 0; i-- {
+		if int(text[i]) == 27 {
+			prevEscPos = i
+			break
+		}
+	}
+	if prevEscPos != -1 {
+		for i := prevEscPos; i < len(text); i++ {
+			if text[i] == 'm' {
+				if i >= pos {
+					return false
+				}
+				break
+			}
+		}
+	}
+
+	return true
+}
+
 func constrainText(text string, minWidth int, maxWidth int, fgcolor string, bgcolor string, elipsize bool) string {
 	width := 0
 	output := ""
@@ -163,8 +235,8 @@ func constrainText(text string, minWidth int, maxWidth int, fgcolor string, bgco
 	if bgcolor != "" {
 		output += fmt.Sprintf("\u001b[%sm", bgcolor)
 	}
-	for _, c := range text {
-		if maxWidth != -1 && minPrintable <= int(c) && int(c) <= maxPrintable {
+	for ti, c := range text {
+		if maxWidth != -1 && willPrint(text, ti) {
 			if elipsize && width+3 == maxWidth {
 				output += "..."
 				width = maxWidth
@@ -175,13 +247,6 @@ func constrainText(text string, minWidth int, maxWidth int, fgcolor string, bgco
 		} else {
 			output += string(c)
 		}
-	}
-
-	if bgcolor != "" {
-		output += "\u001b[0m"
-	}
-	if fgcolor != "" {
-		output += "\u001b[0m"
 	}
 
 	if minWidth != -1 {
@@ -223,16 +288,23 @@ func printSearch(rows [][]RowComponent, selectedRow int, searchKey string) int {
 		}
 
 		for _, component := range rows[i] {
-			line += constrainText(component.Text, component.MinWidth, component.MaxWidth, "", "", true)
+			fgcolor := "37"
+			if component.Type == RowSelectedText {
+				fgcolor = "91"
+			}
+			if i == selectedRow {
+				fgcolor += ";1"
+			}
+			line += constrainText(component.Text, component.MinWidth, component.MaxWidth, fgcolor, "", true)
 		}
 
-		fgcolor := ""
 		bgcolor := ""
 		if i == selectedRow {
-			fgcolor = "37;1"
 			bgcolor = "40"
+		} else {
+			bgcolor = "100"
 		}
-		fmt.Printf("%s\n", constrainText(line, 0, screenWidth, fgcolor, bgcolor, true))
+		fmt.Printf("%s\n", constrainText(line, 0, screenWidth, "", bgcolor, true))
 		rowsPrinted += 1
 	}
 
@@ -257,7 +329,7 @@ func (u *UI) SearchList(getRows func(string) [][]RowComponent, getResult func(in
 			selectedRow = 0
 		}
 
-		fmt.Printf("\r\033[K")
+		fmt.Printf("\u001b[0m\r\033[K")
 		for i := 0; i < prevRowsPrinted; i++ {
 			fmt.Printf("\033[1A\033[K")
 		}
