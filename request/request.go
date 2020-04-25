@@ -2,6 +2,7 @@ package request
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 )
@@ -129,7 +130,7 @@ func RequestFromArgs() Request {
 		bindCommandArgs(flagSets[cmd], &r)
 		flagSets[cmd].Parse(os.Args[2:])
 	} else {
-		log.Printf("TODO: Print proper error\n")
+		fmt.Printf("Unknown command '%s'\n", os.Args[1])
 		os.Exit(1)
 	}
 

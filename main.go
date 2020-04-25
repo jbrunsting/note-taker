@@ -14,14 +14,24 @@ import (
 	"github.com/jbrunsting/note-taker/ui"
 )
 
+func defaultNotesDir() string {
+	home := os.Getenv("HOME")
+	path := home + "/.note-taker"
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		os.Mkdir(path, os.ModePerm)
+	}
+	return path
+}
+
 func main() {
 	r := request.RequestFromArgs()
-	m := manager.Manager{r.NotesDir}
-	u := ui.UI{&m}
 
 	if r.NotesDir == "" {
-		log.Fatalf("TODO: error message, dir empty")
+		r.NotesDir = defaultNotesDir()
 	}
+
+	m := manager.Manager{r.NotesDir}
+	u := ui.UI{&m}
 
 	if r.Cmd == request.NEW {
 		if r.NewArgs == nil {
@@ -65,7 +75,8 @@ func main() {
 				log.Fatalf("TODO: Error '%v'", err)
 			}
 			if len(notes) == 0 {
-				log.Fatalf("TODO: No notes matched")
+				fmt.Printf("No notes found\n")
+                os.Exit(1)
 			}
 			title = u.SearchForNote(notes)
 			if title == "" {
