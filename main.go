@@ -43,6 +43,9 @@ func main() {
 		if r.NewArgs == nil {
 			log.Fatalf("TODO: error message, shouldn't get here")
 		}
+        if strings.Contains(r.NewArgs.Title, "_") {
+            log.Fatalf("Title may not contain any underscores")
+        }
 
 		notes, err := m.ListNotes([]string{})
 		if err != nil {
@@ -67,6 +70,9 @@ func main() {
 		if r.MvArgs.Title == "" || r.MvArgs.Src == "" {
 			log.Fatalf("TODO: Better arg validation")
 		}
+        if strings.Contains(r.MvArgs.Title, "_") {
+            log.Fatalf("Title may not contain any underscores")
+        }
 		components := strings.Split(r.MvArgs.Src, ".")
 		m.Move(r.MvArgs.Src, r.MvArgs.Title, components[len(components)-1])
 	} else if r.Cmd == request.EDIT {

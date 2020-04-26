@@ -27,25 +27,28 @@ func getClass(tag string) string {
 	return o
 }
 
+func getId(title string) string {
+	return "id_n_" + strings.ReplaceAll(title, " ", "_")
+}
+
 func getToggles(tags []string) string {
 	html := ""
 	for _, tag := range tags {
 		html += fmt.Sprintf(
-			"<input id=\"__id_%s\" class=\"%s\" type=\"checkbox\"/>",
-			getClass(tag),
+			"<input id=\"id_c_%[1]s\" class=\"%[1]s\" type=\"checkbox\"/>",
 			getClass(tag),
 		)
 	}
-	html += "<input id=\"dark-mode\" type=\"checkbox\"/>"
+	html += "<input id=\"id_dark_mode\" type=\"checkbox\"/>"
 	html += "<div class=\"tag-selector\">"
 	for _, tag := range tags {
 		html += fmt.Sprintf(
-			"<label for=\"__id_%s\">%s</label>",
+			"<label for=\"id_c_%s\">%s</label>",
 			getClass(tag),
 			tag,
 		)
 	}
-	html += "<label id=\"dark-mode-toggle\" for=\"dark-mode\">☀</label>"
+	html += "<label id=\"id_dark_mode_toggle\" for=\"id_dark_mode\">☀</label>"
 	html += "</div>"
 	return html
 }
@@ -101,9 +104,9 @@ func GenerateHTML(notes []manager.Note, notesDir string) (string, error) {
 			html2md.WithNoExtensions(),
 		))
 
-		html += fmt.Sprintf("<div class=\"__note__ %s\" id=\"%s\">", classes, note.Title)
+		html += fmt.Sprintf("<div class=\"__note__ %s\" id=\"%s\">", classes, getId(note.Title))
 		html += "<div class=\"header\">"
-		html += fmt.Sprintf("<p class=\"note-header\">%s</p>", note.Title)
+		html += fmt.Sprintf("<a href=\"#%s\" class=\"note-header\">%s</a>", getId(note.Title), note.Title)
 		html += tagHtml
 		html += "</div>"
 		html += noteHtml
@@ -124,7 +127,7 @@ func GenerateHTML(notes []manager.Note, notesDir string) (string, error) {
 		tags = append(tags, ot.Tag)
 	}
 
-	html = getToggles(tags) + "<div id=\"body\"><div id=\"content\">" + html + "</div></div>"
+	html = getToggles(tags) + "<div id=\"id_body\"><div id=\"id_content\">" + html + "</div></div>"
 	return "<html>" + getStyle(tags) + "<body>" + html + "</body></html>", nil
 }
 
@@ -143,7 +146,7 @@ body {
     height: 100%;
 }
 
-#body {
+#id_body {
 	width: 100%;
     padding: 0px;
 	margin: 0px;
@@ -152,7 +155,7 @@ body {
 	min-height: 100%;
 }
 
-#content {
+#id_content {
 	margin: 0px auto;
 	max-width: 800px;
 }
@@ -219,9 +222,10 @@ div.tag-selector {
 	max-width: 800px;
 }
 
-#dark-mode-toggle {
+#id_dark_mode_toggle {
     margin-right: 0px;
 	margin-left: auto;
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
 }
 
 .__note__ {
@@ -249,10 +253,12 @@ div.tag-selector {
 }
 
 .note-header {
+	cursor: pointer;
     font-weight: bold;
     margin: 1px 0px;
     font-size: 1em;
     display: inline-block;
+	text-decoration: none;
 }
 
 .tag {
@@ -271,7 +277,7 @@ div.tag-selector {
 }`
 	// TODO: Should refactor this
 	css += `
-#body {
+#id_body {
     color: #2E2E2E;
     background-color: #F4EFE5;
 }
@@ -281,7 +287,7 @@ label {
     background-color: #6D9D99;
 }
 
-#dark-mode-toggle {
+#id_dark_mode_toggle {
     color: #2E2E2E;
     background-color: #FAF8F3;
 }
@@ -295,40 +301,40 @@ label {
 	border-color: #6D9D99;
 }
 
-#dark-mode:checked ~ #body {
+#id_dark_mode:checked ~ #id_body {
     color: #D1D1D1;
     background-color: #05070C;
 }
 
-#dark-mode:checked ~ .tag-selector label {
+#id_dark_mode:checked ~ .tag-selector label {
     color: #0B101A;
 }
 
-#dark-mode:checked ~ .tag-selector #dark-mode-toggle {
+#id_dark_mode:checked ~ .tag-selector #id_dark_mode_toggle {
     color: #D1D1D1;
     background-color: #2E2E2E;
 }
 
-#dark-mode:checked ~ #body .__note__ {
+#id_dark_mode:checked ~ #id_body .__note__ {
     background-color: #2E2E2E;
 }
 
-#dark-mode:checked ~ #body .header {
+#id_dark_mode:checked ~ #id_body .header {
 	border-bottom: 1px solid #FAF8F3;
 }
 `
 	for _, tag := range tags {
 		css += fmt.Sprintf(`
-input.%[1]s ~ #body div.%[1]s {
+input.%[1]s ~ #id_body div.%[1]s {
     display: none
 }
-input.%[1]s:not(:checked) ~ #body div.%[1]s {
+input.%[1]s:not(:checked) ~ #id_body div.%[1]s {
 	display: block;
 }
-input.%[1]s:checked ~ div > label[for=__id_%[1]s] {
+input.%[1]s:checked ~ div > label[for=id_c_%[1]s] {
 	background-color: #BFC9BC;
 }
-input.%[1]s:checked ~ #dark-mode:checked ~ div > label[for=__id_%[1]s] {
+input.%[1]s:checked ~ #id_dark_mode:checked ~ div > label[for=id_c_%[1]s] {
 	background-color: #556b69;
 }
 `,
