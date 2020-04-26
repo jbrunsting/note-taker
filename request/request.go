@@ -18,6 +18,8 @@ const (
 	FIND
 	HTML
 	GIT
+	PUSH
+	INIT_REPO
 )
 
 const (
@@ -57,16 +59,16 @@ type HtmlArgs struct {
 }
 
 type Request struct {
-	Cmd        Cmd
-	Args       []string
-	NotesDir   string
-	NewArgs    *NewArgs
-	MvArgs     *MvArgs
-	EditArgs   *EditArgs
-	DeleteArgs *DeleteArgs
-	ConcatArgs *ConcatArgs
-	FindArgs   *FindArgs
-	HtmlArgs   *HtmlArgs
+	Cmd          Cmd
+	Args         []string
+	NotesDir     string
+	NewArgs      *NewArgs
+	MvArgs       *MvArgs
+	EditArgs     *EditArgs
+	DeleteArgs   *DeleteArgs
+	ConcatArgs   *ConcatArgs
+	FindArgs     *FindArgs
+	HtmlArgs     *HtmlArgs
 }
 
 func bindSharedArgs(fs *flag.FlagSet, r *Request) {
@@ -117,6 +119,8 @@ func RequestFromArgs() Request {
 	cmds["find"] = FIND
 	cmds["html"] = HTML
 	cmds["git"] = GIT
+	cmds["push"] = PUSH
+	cmds["init-repo"] = INIT_REPO
 
 	flagSets := make(map[Cmd]*flag.FlagSet)
 	for s, e := range cmds {

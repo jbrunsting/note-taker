@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/jbrunsting/note-taker/html"
 	"github.com/jbrunsting/note-taker/manager"
@@ -175,6 +176,44 @@ func main() {
 			"bash",
 			"-c",
 			fmt.Sprintf("cd %s && git %s", r.NotesDir, strings.Join(r.Args, "")),
+		)
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Run()
+	} else if r.Cmd == request.PUSH {
+		cmd := exec.Command(
+			"bash",
+			"-c",
+			fmt.Sprintf(
+				"cd %s && git add . && git commit -m \"%s\" && git push",
+				r.NotesDir,
+				time.Now().Format("2006.01.02 15:04:05"),
+			),
+		)
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Run()
+	} else if r.Cmd == request.INIT_REPO {
+		if len(r.Args) == 0 {
+			log.Fatalf("Must provide origin as first argument")
+		}
+		cmd := exec.Command(
+			"bash",
+			"-c",
+			fmt.Sprintf(`
+cd %s &&
+git init &&
+git remote add origin %s &&
+echo "This is a repository of notes" >> README.md &&
+git add . &&
+git commit -m "Init repo" &&
+git push -u origin master
+`,
+				r.NotesDir,
+				r.Args[0],
+			),
 		)
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
