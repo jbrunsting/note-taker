@@ -101,7 +101,7 @@ func GenerateHTML(notes []manager.Note, notesDir string) (string, error) {
 			html2md.WithNoExtensions(),
 		))
 
-		html += fmt.Sprintf("<div class=\"note %s\" id=\"%s\">", classes, note.Title)
+		html += fmt.Sprintf("<div class=\"__note__ %s\" id=\"%s\">", classes, note.Title)
 		html += "<div class=\"header\">"
 		html += fmt.Sprintf("<p class=\"note-header\">%s</p>", note.Title)
 		html += tagHtml
@@ -224,18 +224,18 @@ div.tag-selector {
 	margin-left: auto;
 }
 
-.note {
+.__note__ {
     margin: 10px 0px;
     padding: 10px;
     border-radius: 3px;
     box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
 }
 
-.note * {
+.__note__ * {
 	max-width: 100%;
 }
 
-.note img {
+.__note__ img {
 	max-height: 450px;
 	margin: auto;
 	display: block;
@@ -286,7 +286,7 @@ label {
     background-color: #FAF8F3;
 }
 
-.note {
+.__note__ {
     background-color: #FAF8F3;
 }
 
@@ -309,7 +309,7 @@ label {
     background-color: #2E2E2E;
 }
 
-#dark-mode:checked ~ #body .note {
+#dark-mode:checked ~ #body .__note__ {
     background-color: #2E2E2E;
 }
 

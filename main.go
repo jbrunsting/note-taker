@@ -16,6 +16,10 @@ import (
 	"github.com/jbrunsting/note-taker/ui"
 )
 
+const readmeString = `
+This is a repository of markdown-formatted notes. A note should start with a header of the form [@id, #tag1, #tag2,...].
+`
+
 func defaultNotesDir() string {
 	home := os.Getenv("HOME")
 	path := home + "/.note-taker"
@@ -175,7 +179,7 @@ func main() {
 		cmd := exec.Command(
 			"bash",
 			"-c",
-			fmt.Sprintf("cd %s && git %s", r.NotesDir, strings.Join(r.Args, "")),
+			fmt.Sprintf("cd %s && git %s", r.NotesDir, strings.Join(r.Args, " ")),
 		)
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
@@ -206,13 +210,14 @@ func main() {
 cd %s &&
 git init &&
 git remote add origin %s &&
-echo "This is a repository of notes" >> README.md &&
+echo "%s" >> README.txt &&
 git add . &&
 git commit -m "Init repo" &&
 git push -u origin master
 `,
 				r.NotesDir,
 				r.Args[0],
+				readmeString,
 			),
 		)
 		cmd.Stdin = os.Stdin
