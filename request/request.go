@@ -17,6 +17,7 @@ const (
 	CONCAT
 	FIND
 	HTML
+	GIT
 )
 
 const (
@@ -57,6 +58,7 @@ type HtmlArgs struct {
 
 type Request struct {
 	Cmd        Cmd
+	Args       []string
 	NotesDir   string
 	NewArgs    *NewArgs
 	MvArgs     *MvArgs
@@ -114,6 +116,7 @@ func RequestFromArgs() Request {
 	cmds["concat"] = CONCAT
 	cmds["find"] = FIND
 	cmds["html"] = HTML
+	cmds["git"] = GIT
 
 	flagSets := make(map[Cmd]*flag.FlagSet)
 	for s, e := range cmds {
@@ -126,6 +129,7 @@ func RequestFromArgs() Request {
 	}
 
 	if cmd, ok := cmds[os.Args[1]]; ok {
+		r.Args = os.Args[2:]
 		r.Cmd = cmd
 		bindCommandArgs(flagSets[cmd], &r)
 		flagSets[cmd].Parse(os.Args[2:])

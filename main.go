@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/jbrunsting/note-taker/html"
@@ -76,7 +77,7 @@ func main() {
 			}
 			if len(notes) == 0 {
 				fmt.Printf("No notes found\n")
-                os.Exit(1)
+				os.Exit(1)
 			}
 			title = u.SearchForNote(notes)
 			if title == "" {
@@ -169,5 +170,15 @@ func main() {
 				log.Fatalf("TODO: Error '%v'", err)
 			}
 		}
+	} else if r.Cmd == request.GIT {
+		cmd := exec.Command(
+			"bash",
+			"-c",
+			fmt.Sprintf("cd %s && git %s", r.NotesDir, strings.Join(r.Args, "")),
+		)
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Run()
 	}
 }
