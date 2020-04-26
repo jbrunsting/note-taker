@@ -43,9 +43,9 @@ func main() {
 		if r.NewArgs == nil {
 			log.Fatalf("TODO: error message, shouldn't get here")
 		}
-        if strings.Contains(r.NewArgs.Title, "_") {
-            log.Fatalf("Title may not contain any underscores")
-        }
+		if strings.Contains(r.NewArgs.Title, "_") {
+			log.Fatalf("Title may not contain any underscores")
+		}
 
 		notes, err := m.ListNotes([]string{})
 		if err != nil {
@@ -70,9 +70,9 @@ func main() {
 		if r.MvArgs.Title == "" || r.MvArgs.Src == "" {
 			log.Fatalf("TODO: Better arg validation")
 		}
-        if strings.Contains(r.MvArgs.Title, "_") {
-            log.Fatalf("Title may not contain any underscores")
-        }
+		if strings.Contains(r.MvArgs.Title, "_") {
+			log.Fatalf("Title may not contain any underscores")
+		}
 		components := strings.Split(r.MvArgs.Src, ".")
 		m.Move(r.MvArgs.Src, r.MvArgs.Title, components[len(components)-1])
 	} else if r.Cmd == request.EDIT {
@@ -173,13 +173,12 @@ func main() {
 			// TODO: Add err check function that logs error nicely
 			log.Fatalf("TODO: Error '%v'", err)
 		}
-		if r.HtmlArgs.File == "" {
-			fmt.Println(string(o))
-		} else {
-			err := ioutil.WriteFile(r.HtmlArgs.File, []byte(o), 0644)
-			if err != nil {
-				log.Fatalf("TODO: Error '%v'", err)
-			}
+		filepath := r.HtmlArgs.File
+		if filepath == "" {
+			filepath = r.NotesDir + "/index.html"
+		}
+		if ioutil.WriteFile(filepath, []byte(o), 0644) != nil {
+			log.Fatalf("TODO: Error '%v'", err)
 		}
 	} else if r.Cmd == request.GIT {
 		cmd := exec.Command(
