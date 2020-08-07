@@ -2,7 +2,6 @@ package request
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 )
@@ -59,16 +58,16 @@ type HtmlArgs struct {
 }
 
 type Request struct {
-	Cmd          Cmd
-	Args         []string
-	NotesDir     string
-	NewArgs      *NewArgs
-	MvArgs       *MvArgs
-	EditArgs     *EditArgs
-	DeleteArgs   *DeleteArgs
-	ConcatArgs   *ConcatArgs
-	FindArgs     *FindArgs
-	HtmlArgs     *HtmlArgs
+	Cmd        Cmd
+	Args       []string
+	NotesDir   string
+	NewArgs    *NewArgs
+	MvArgs     *MvArgs
+	EditArgs   *EditArgs
+	DeleteArgs *DeleteArgs
+	ConcatArgs *ConcatArgs
+	FindArgs   *FindArgs
+	HtmlArgs   *HtmlArgs
 }
 
 func bindSharedArgs(fs *flag.FlagSet, r *Request) {
@@ -105,11 +104,6 @@ func bindCommandArgs(fs *flag.FlagSet, r *Request) {
 }
 
 func RequestFromArgs() Request {
-	if len(os.Args) < 2 {
-		log.Fatalf("TODO: Print subcommands\n")
-		os.Exit(1)
-	}
-
 	cmds := make(map[string]Cmd)
 	cmds["new"] = NEW
 	cmds["mv"] = MV
@@ -121,6 +115,15 @@ func RequestFromArgs() Request {
 	cmds["git"] = GIT
 	cmds["push"] = PUSH
 	cmds["init-repo"] = INIT_REPO
+
+	keys := []string{}
+	for k := range cmds {
+		keys = append(keys, k)
+	}
+	if len(os.Args) < 2 {
+		log.Fatalf("Must provide one of: %v\n", keys)
+		os.Exit(1)
+	}
 
 	flagSets := make(map[Cmd]*flag.FlagSet)
 	for s, e := range cmds {
@@ -138,7 +141,7 @@ func RequestFromArgs() Request {
 		bindCommandArgs(flagSets[cmd], &r)
 		flagSets[cmd].Parse(os.Args[2:])
 	} else {
-		fmt.Printf("Unknown command '%s'\n", os.Args[1])
+		log.Fatalf("Unknown command '%s', must provide one of: %v\n", os.Args[1], keys)
 		os.Exit(1)
 	}
 

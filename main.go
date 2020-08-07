@@ -29,6 +29,22 @@ func defaultNotesDir() string {
 	return path
 }
 
+func saveAsHTML(m *manager.Manager, tags []string, notesDir string, filepath string) {
+	notes, err := m.ListNotes(tags)
+	if err != nil {
+		log.Fatalf("TODO: Error '%v'", err)
+	}
+	manager.SortNotesById(notes)
+	o, err := html.GenerateHTML(notes, notesDir)
+	if err != nil {
+		// TODO: Add err check function that logs error nicely
+		log.Fatalf("TODO: Error '%v'", err)
+	}
+	if ioutil.WriteFile(filepath, []byte(o), 0644) != nil {
+		log.Fatalf("TODO: Error '%v'", err)
+	}
+}
+
 func main() {
 	r := request.RequestFromArgs()
 
@@ -63,6 +79,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Got error: '%v'", err)
 		}
+		saveAsHTML(&m, r.HtmlArgs.Tags, r.NotesDir, r.NotesDir+"/index.html")
 	} else if r.Cmd == request.MV {
 		if r.MvArgs == nil {
 			log.Fatalf("TODO: No image thing")
@@ -100,6 +117,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Got error: '%v'", err)
 		}
+		saveAsHTML(&m, []string{}, r.NotesDir, r.NotesDir+"/index.html")
 	} else if r.Cmd == request.DELETE {
 		if r.DeleteArgs == nil {
 			log.Fatalf("TODO: error message, shouldn't get here")
@@ -126,6 +144,7 @@ func main() {
 		} else {
 			fmt.Printf("Did not delete\n")
 		}
+		saveAsHTML(&m, []string{}, r.NotesDir, r.NotesDir+"/index.html")
 	} else if r.Cmd == request.CONCAT {
 		if r.ConcatArgs == nil {
 			log.Fatalf("TODO: error message, shouldn't get here")
@@ -163,23 +182,11 @@ func main() {
 			log.Fatalf("TODO: error message, shouldn't get here")
 		}
 
-		notes, err := m.ListNotes(r.HtmlArgs.Tags)
-		if err != nil {
-			log.Fatalf("TODO: Error '%v'", err)
-		}
-		manager.SortNotesById(notes)
-		o, err := html.GenerateHTML(notes, r.NotesDir)
-		if err != nil {
-			// TODO: Add err check function that logs error nicely
-			log.Fatalf("TODO: Error '%v'", err)
-		}
 		filepath := r.HtmlArgs.File
 		if filepath == "" {
 			filepath = r.NotesDir + "/index.html"
 		}
-		if ioutil.WriteFile(filepath, []byte(o), 0644) != nil {
-			log.Fatalf("TODO: Error '%v'", err)
-		}
+		saveAsHTML(&m, []string{}, r.NotesDir, filepath)
 	} else if r.Cmd == request.GIT {
 		cmd := exec.Command(
 			"bash",
