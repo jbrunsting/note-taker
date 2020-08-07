@@ -226,14 +226,11 @@ func willPrint(text string, pos int) bool {
 	return true
 }
 
-func constrainText(text string, minWidth int, maxWidth int, fgcolor string, bgcolor string, elipsize bool) string {
+func constrainText(text string, minWidth int, maxWidth int, fgcolor string, elipsize bool) string {
 	width := 0
 	output := ""
 	if fgcolor != "" {
 		output += fmt.Sprintf("\u001b[%sm", fgcolor)
-	}
-	if bgcolor != "" {
-		output += fmt.Sprintf("\u001b[%sm", bgcolor)
 	}
 	for ti, c := range text {
 		if maxWidth != -1 && willPrint(text, ti) {
@@ -295,16 +292,10 @@ func printSearch(rows [][]RowComponent, selectedRow int, searchKey string) int {
 			if i == selectedRow {
 				fgcolor += ";1"
 			}
-			line += constrainText(component.Text, component.MinWidth, component.MaxWidth, fgcolor, "", true)
+			line += constrainText(component.Text, component.MinWidth, component.MaxWidth, fgcolor, true)
 		}
 
-		bgcolor := ""
-		if i == selectedRow {
-			bgcolor = "40"
-		} else {
-			bgcolor = "100"
-		}
-		fmt.Printf("%s\n", constrainText(line, 0, screenWidth, "", bgcolor, true))
+		fmt.Printf("%s\033[0m\n", constrainText(line, 0, screenWidth, "", true))
 		rowsPrinted += 1
 	}
 
@@ -317,6 +308,7 @@ func (u *UI) SearchList(getRows func(string) [][]RowComponent, getResult func(in
 	var rows [][]RowComponent
 	searchKey := ""
 	selectedRow := 0
+	exec.Command("stty", "-f", "/dev/tty", "cbreak", "min", "1").Run()
 	exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run()
 
 	prevRowsPrinted := 0
