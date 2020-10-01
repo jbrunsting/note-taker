@@ -21,10 +21,6 @@ const (
 	INIT_REPO
 )
 
-const (
-	DefaultNoteTitle = "Untitled"
-)
-
 type NewArgs struct {
 	Title string
 	Tags  ArrayFlags
@@ -74,14 +70,14 @@ func bindSharedArgs(fs *flag.FlagSet, r *Request) {
 	fs.StringVar(&r.NotesDir, "path", "", "path to notes directory")
 }
 
-func bindCommandArgs(fs *flag.FlagSet, r *Request) {
+func bindCommandArgs(fs *flag.FlagSet, r *Request, title string) {
 	if r.Cmd == NEW {
 		r.NewArgs = &NewArgs{}
-		fs.StringVar(&r.NewArgs.Title, "title", DefaultNoteTitle, "the title of the note")
+		r.NewArgs.Title = title
 		fs.Var(&r.NewArgs.Tags, "tags", "the tags for the note")
 	} else if r.Cmd == MV {
 		r.MvArgs = &MvArgs{}
-		fs.StringVar(&r.MvArgs.Title, "title", DefaultNoteTitle, "the new title of the file")
+		r.MvArgs.Title = title
 		fs.StringVar(&r.MvArgs.Src, "src", "", "the path to the file")
 	} else if r.Cmd == EDIT {
 		r.EditArgs = &EditArgs{}
@@ -92,7 +88,7 @@ func bindCommandArgs(fs *flag.FlagSet, r *Request) {
 		fs.Var(&r.ConcatArgs.Tags, "tags", "the tags for the note")
 	} else if r.Cmd == DELETE {
 		r.DeleteArgs = &DeleteArgs{}
-		fs.StringVar(&r.DeleteArgs.Title, "title", "", "the title of the note")
+		r.DeleteArgs.Title = title
 	} else if r.Cmd == FIND {
 		r.FindArgs = &FindArgs{}
 		fs.Var(&r.FindArgs.Tags, "tags", "the tags for the note")
@@ -101,6 +97,17 @@ func bindCommandArgs(fs *flag.FlagSet, r *Request) {
 		fs.Var(&r.HtmlArgs.Tags, "tags", "the tags for the note")
 		fs.StringVar(&r.HtmlArgs.File, "file", "", "the file to store the html output")
 	}
+}
+
+func requiresPath(command Cmd) bool {
+	switch command {
+	case
+		NEW,
+		MV,
+		DELETE:
+		return true
+	}
+	return false
 }
 
 func RequestFromArgs() Request {
@@ -136,9 +143,19 @@ func RequestFromArgs() Request {
 	}
 
 	if cmd, ok := cmds[os.Args[1]]; ok {
-		r.Args = os.Args[2:]
 		r.Cmd = cmd
-		bindCommandArgs(flagSets[cmd], &r)
+		var title string
+		if requiresPath(r.Cmd) {
+			if len(os.Args) < 3 {
+				log.Fatalf("Must provide a title as the second argument\n")
+				os.Exit(1)
+			}
+			title = os.Args[2]
+			r.Args = os.Args[3:]
+		} else {
+			r.Args = os.Args[2:]
+		}
+		bindCommandArgs(flagSets[cmd], &r, title)
 		flagSets[cmd].Parse(os.Args[2:])
 	} else {
 		log.Fatalf("Unknown command '%s', must provide one of: %v\n", os.Args[1], keys)

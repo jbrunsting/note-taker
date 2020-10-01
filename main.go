@@ -79,7 +79,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Got error: '%v'", err)
 		}
-		saveAsHTML(&m, r.HtmlArgs.Tags, r.NotesDir, r.NotesDir+"/index.html")
+		saveAsHTML(&m, r.NewArgs.Tags, r.NotesDir, r.NotesDir+"/index.html")
 	} else if r.Cmd == request.MV {
 		if r.MvArgs == nil {
 			log.Fatalf("TODO: No image thing")

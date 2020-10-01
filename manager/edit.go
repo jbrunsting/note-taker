@@ -46,6 +46,11 @@ func edit(path string) error {
 }
 
 func (m *Manager) Edit(name string) error {
+	path := m.getPath(m.getFileName(name, "md", 0))
+	_, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
 	return edit(m.getPath(m.getFileName(name, "md", 0)))
 }
 
