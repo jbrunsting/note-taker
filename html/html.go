@@ -71,6 +71,9 @@ type OrderedTag struct {
 }
 
 func GenerateHTML(notes []manager.Note, notesDir string) (string, error) {
+	sort.SliceStable(notes, func(i, j int) bool {
+		return notes[i].ModTime.After(notes[j].ModTime)
+	})
 	oTags := make(map[string]*OrderedTag)
 	html := ""
 	for _, note := range notes {
